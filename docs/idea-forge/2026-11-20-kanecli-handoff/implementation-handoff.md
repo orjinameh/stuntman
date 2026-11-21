@@ -7,7 +7,7 @@ Builder: one implementation agent working from this document alone. It has no ac
 
 Build **Stuntman**, a zero-dependency Node CLI that turns one plain-English purchase journey into a cast of adversarial human performances, runs each performance against a real web app through Kane CLI, and proves which behaviours break a business invariant. A confirmed hazard becomes a typed finding, a machine-readable repair brief for a coding agent, and a committed `_test.md` that replays for free. The repo also contains a small storefront whose only defence against duplicate submission is the one the coding agent forgot to write; that storefront is the demo, not the product.
 
-Done means: a clean clone runs `npm test` offline, then `node bin/stuntman.mjs audit --fixture-state broken` produces the confirmed double-order finding, `brief` emits the repair brief, `heal` hands it to an agent command and re-audits, and `lock` writes a replayable Kane test. A judge opens the README, sees the one-command quick start, the report, and the honest confidence rule, and can reproduce the whole flow without a Kane account in fixture mode.
+Done means: a clean clone runs `npm test` offline, then `node bin/stuntman.mjs audit --fixture-state broken` produces the confirmed double-order finding, `brief` emits the repair brief, `lock` turns the confirmed hazard into a replayable Kane test before any fix, and `heal` hands the brief to an agent command and re-audits against the locked contract. A judge opens the README, sees the one-command quick start, the report, and the honest confidence rule, and can reproduce the whole flow without a Kane account in fixture mode.
 
 The first thing a judge should open is `README.md`, then `runs/<timestamp>/report.html` from the recorded demo. The README must lead with the customer being charged twice, not with the word "persona".
 
@@ -67,16 +67,16 @@ All URLs retrieved 2026-11-20 or 2026-11-21. Full evidence table with grades is 
 **Actor:** a solo builder or platform engineer who has an agent-built web app and one critical journey in mind. **Trigger:** they are about to ship, or an agent has just said "done".
 
 1. **First run, no Kane account (fixture mode).**
-   Actor runs `npm test`, then `node bin/stuntman.mjs audit --fixture-state broken` in a clean clone. Stuntman compiles five persona objectives, replays eight recorded NDJSON runs, classifies them, prints a lane table, writes `runs/<timestamp>/report.html`, and exits 1. Visible result: `impatient` is **CONFIRMED** with `2 orders, $98.00 charged`; `refresher` is **suspected** (one of two runs failed); three personas are clean. The report carries a `FIXTURE` badge.
+   Actor runs `npm test`, then `node bin/stuntman.mjs audit --fixture-state broken` in a clean clone. Stuntman compiles five persona objectives, replays seven recorded NDJSON runs from the broken fixture set, classifies them, prints a lane table, writes `runs/<timestamp>/report.html`, and exits 1. Visible result: `impatient` is **CONFIRMED** with `2 orders, $98.00 charged`; `refresher` is **suspected** (one of two runs failed); three personas are clean. The report carries a `FIXTURE` badge.
 
 2. **Live audit.**
    Actor installs Kane (`npm install -g @testmuai/kane-cli`), runs `kane-cli login`, starts the demo app (`node demo/app/server.mjs`), and runs `node bin/stuntman.mjs audit --live`. Stuntman spawns `kane-cli run "<objective>" --agent --url ... --max-steps 40 --timeout 180` for each persona, parses the NDJSON `run_end` event, repeats only the failures, and prints the same table with a `LIVE` badge. Visible result: the same finding, backed by a `session_dir`, a sealed `.evidence` pack, and a screenshot embedded in the report.
 
-3. **Repair loop.**
-   Actor runs `node bin/stuntman.mjs brief F-001`. Stuntman writes `runs/<timestamp>/briefs/F-001.md` and `F-001.json`. Actor runs `node bin/stuntman.mjs heal F-001 --agent-cmd '<agent command> {brief}'`. Stuntman substitutes the absolute brief path, runs the command in the project root, then re-audits only the `impatient` persona twice. Visible result: `heal` exits 0 and prints `CLEAN — the hazard is no longer reproducible`; if the hazard survives, it exits 1 and says so.
+3. **Brief and lock.**
+   Actor runs `node bin/stuntman.mjs brief F-001`. Stuntman writes `runs/<timestamp>/briefs/F-001.md` and `F-001.json`. Actor runs `node bin/stuntman.mjs lock`. Stuntman reads the most recent report that contains a confirmed finding (not the latest report if a later re-audit is clean), writes `tests/stuntman-impatient_test.md` with `mode: testing`, `url`, `tags: [stuntman, impatient, p0]`, `max_steps`, `timeout`, and prose steps, then writes `stuntman.lock` with the contract hashes. Visible result: the contract is locked **before** the fix, so the agent cannot weaken the test it has to satisfy; `git diff` shows exactly what was locked.
 
-4. **Lock.**
-   Actor runs `node bin/stuntman.mjs lock`. Stuntman writes `tests/stuntman-impatient_test.md` with `mode: testing`, `url`, `tags: [stuntman, impatient, p0]`, `max_steps`, `timeout`, and prose steps, then writes `stuntman.lock` with the contract hashes. Visible result: a committable test plus a lock file; `git diff` shows exactly what was locked.
+4. **Repair loop.**
+   Actor runs `node bin/stuntman.mjs heal F-001 --agent-cmd '<agent command> {brief}'`. Stuntman substitutes the absolute brief path, runs the command in the project root, then re-audits only the `impatient` persona twice against the locked contract. Visible result: `heal` exits 0 and prints `CLEAN — the hazard is no longer reproducible`; if the hazard survives, it exits 1 and says so.
 
 5. **Verify.**
    Actor runs `node bin/stuntman.mjs verify --live`. Stuntman runs `kane-cli testmd run tests/stuntman-impatient_test.md --agent` and parses the `test_md_done` event. Visible result: `PASS` in seconds on a replayed test, with a Test Manager link and a pack in `.testmuai/evidence/`. With `--fixture`, the same command replays the recorded fixture and prints `replayed from fixture`.
@@ -132,7 +132,7 @@ When a live `run_end` provides `session_dir`, `src/evidence.mjs` looks for `sess
 
 ### F-12 Test lock and contract hash [MUST]
 
-`stuntman lock` writes one `tests/stuntman-<persona>_test.md` per confirmed hazard. The frontmatter uses only documented Kane keys: `mode: testing`, `url`, `tags`, `max_steps`, `timeout`, `code_export: false`. The body has an H1 title and one H2 per step, with the persona behaviour as its own step and the observation plus assertion as the final step. `stuntman.lock` stores `contract_hash`, per-section hashes (`journey`, `observations`, `personas`), `audited_commit`, `created_at`, persona versions, and the test paths. `audit` recomputes the hashes and refuses to run on a mismatch, naming the changed section; `--allow-contract-change` overrides. The README states plainly that this is a tripwire, not a security boundary. Covers AC-15, AC-16, AC-17.
+`stuntman lock` writes one `tests/stuntman-<persona>_test.md` per confirmed hazard. It reads the **most recent report that contains a confirmed finding**, so a clean re-audit after a fix does not erase the hazard before it is locked; `--run <dir>` selects a specific report. The frontmatter uses only documented Kane keys: `mode: testing`, `url`, `tags`, `max_steps`, `timeout`, `code_export: false`. The body has an H1 title and one H2 per step, with the persona behaviour as its own step and the observation plus assertion as the final step. `stuntman.lock` stores `contract_hash`, per-section hashes (`journey`, `observations`, `personas`), `audited_commit`, `created_at`, persona versions, and the test paths. `audit` recomputes the hashes and refuses to run on a mismatch, naming the changed section; `--allow-contract-change` overrides. The README states plainly that this is a tripwire, not a security boundary. Covers AC-15, AC-16, AC-17.
 
 ### F-13 Verify locked tests [SHOULD]
 
@@ -140,11 +140,13 @@ When a live `run_end` provides `session_dir`, `src/evidence.mjs` looks for `sess
 
 ### F-14 Demo storefront [MUST]
 
-`demo/app/server.mjs` is a zero-dependency Node HTTP server with in-memory state and three seeded products: Harbor Mug $49.00, Field Notebook $12.00, Canvas Tote $28.00. Routes: `GET /`, `GET /cart`, `GET /checkout`, `POST /cart/add`, `POST /api/orders`, `GET /orders`, `GET /orders/:id`, `GET /__state`, `POST /admin/reset`, `GET /health`. Checkout takes an email and a test card, posts to `/api/orders`, creates one order and one charge, clears the cart, and redirects to a confirmation page that says `Order confirmed`. The Pay button is a normal submit and is not disabled while the request is in flight. The server deliberately has no idempotency key: the brief it was built from never asked for one. Covers AC-20, AC-21.
+`demo/app/server.mjs` is a zero-dependency Node HTTP server with in-memory state and three seeded products: Harbor Mug $49.00, Field Notebook $12.00, Canvas Tote $28.00. Routes: `GET /`, `GET /cart`, `GET /checkout`, `POST /cart/add`, `POST /api/orders`, `GET /orders`, `GET /orders/:id`, `GET /__state`, `POST /admin/reset`, `GET /health`. Checkout takes an email and a test card, posts to `/api/orders`, creates one order and one charge, clears the cart, and redirects to a confirmation page that says `Order confirmed`. The Pay button is a normal submit and is not disabled while the request is in flight. The server deliberately has no idempotency key: the brief it was built from never asked for one.
+
+`demo/BRIEF.md` is a one-page product brief for that store: the three products and prices, the cart, guest checkout with a fake email and a test card, the confirmation page, the orders page, the reset endpoint, and a clean visual style. It must **not** mention duplicate submission, idempotency, retries, disabled buttons, rate limits, or the Stuntman product. `demo/PROMPT.md` is the fresh-session prompt: build exactly the brief, add nothing it does not ask for, and return a ZIP. Covers AC-20, AC-21.
 
 ### F-15 Reference patch and reference agent [MUST]
 
-`demo/patches/0001-idempotent-checkout.patch` is a real unified diff that adds a single-use checkout nonce and makes a repeated POST with the same nonce redirect to the existing order instead of creating a second one. `demo/agent-fix.mjs` is a reference agent command that reads the brief JSON, checks the finding id, and applies the patch; it exists for the automated test suite and the offline fallback, and the README labels it as a stand-in, not as the live demo's agent. The patch must apply cleanly with `git apply` and must make the double-POST test produce one order. Covers AC-22.
+`demo/patches/0001-idempotent-checkout.patch` is a real unified diff that adds a single-use checkout nonce and makes a repeated POST with the same nonce redirect to the existing order instead of creating a second one. `demo/agent-fix.mjs` is a reference agent command that reads the brief JSON, checks the finding id, and applies the patch idempotently (it skips the patch when it is already applied); it exists for the automated test suite and the offline fallback, and the README labels it as a stand-in, not as the live demo's agent. The patch must apply cleanly with `git apply` and must make the double-POST test produce one order. Covers AC-22.
 
 ### F-16 Budget guard [SHOULD]
 
@@ -195,7 +197,7 @@ tests/*_test.md                generated by lock
 
 ```
 audit --live
-  ├─ load config, recompute contract hashes, compare with stuntman.lock
+  ├─ load config, recompute contract hashes, compare with stuntman.lock if it exists
   ├─ compile 5 objectives
   ├─ pass 1: run each persona once  ──> kane-cli run ... --agent ──> run_end
   ├─ pass 2: rerun only failures    ──> kane-cli run ... --agent ──> run_end
@@ -204,12 +206,12 @@ audit --live
   └─ exit 1 if confirmed
 brief F-001
   └─ report.json ──> briefs/F-001.md + F-001.json
+lock
+  ├─ last report with a confirmed finding ──> tests/stuntman-impatient_test.md
+  └─ hashes ──> stuntman.lock
 heal F-001 --agent-cmd "agent {brief}"
   ├─ spawn agent in project root
-  └─ rerun impatient twice ──> clean? exit 0 : exit 1
-lock
-  ├─ confirmed findings ──> tests/stuntman-impatient_test.md
-  └─ hashes ──> stuntman.lock
+  └─ rerun impatient twice against the locked contract ──> clean? exit 0 : exit 1
 verify --live
   └─ kane-cli testmd run tests/stuntman-impatient_test.md --agent ──> test_md_done
 ```
@@ -390,7 +392,7 @@ Why this stack: the event rewards installability and a tight loop. Every depende
 - Endpoints / signatures used (this project's contract):
   - `GET /` storefront with the three products.
   - `GET /cart`, `POST /cart/add` (form field `product_id`), `GET /checkout`.
-  - `POST /api/orders` (form fields `email`, `card`, `nonce`) creates an order and a charge, clears the cart, and responds `303` to `/orders/<id>`.
+  - `POST /api/orders` (form fields `email`, `card`) creates an order and a charge, clears the cart, and responds `303` to `/orders/<id>`. The reference patch adds a single-use `nonce` field; the shipped app does not have one.
   - `GET /orders/<id>` confirmation with `Order confirmed`; `GET /orders` lists every order with id, total, timestamp, and charge amount.
   - `GET /__state` returns `{ products, cart, orders, charges }` as JSON for tests.
   - `POST /admin/reset` resets the state to the seed.
@@ -427,7 +429,7 @@ Why this stack: the event rewards installability and a tight loop. Every depende
 - Priority: P0 must-ship
 - Deadline: 2026-11-23
 - Deliverables: `src/brief.mjs`, `src/heal.mjs`, `src/lock.mjs`, `src/verify.mjs`, `src/evidence.mjs` (best-effort), `demo/patches/0001-idempotent-checkout.patch`, `demo/agent-fix.mjs`, and the integration tests for brief, heal, lock, and verify.
-- Exit criteria: `brief F-001` writes both files and names the observed value; `heal F-001 --agent-cmd 'node demo/agent-fix.mjs {brief}' --fixture-state fixed` exits 0 and prints `CLEAN`; the same command without the fixed state exits 1; `lock` writes a valid `_test.md` and `stuntman.lock`; changing a persona makes `audit` refuse with a contract error; `verify --fixture` passes.
+- Exit criteria: `brief F-001` writes both files and names the observed value; `lock` writes a valid `_test.md` and `stuntman.lock` from the confirmed report; `heal F-001 --agent-cmd 'node demo/agent-fix.mjs {brief}' --fixture-state fixed` exits 0 and prints `CLEAN`; the same command without the fixed state exits 1; changing a persona makes `audit` refuse with a contract error; `verify --fixture` passes.
 
 ### P3 Live Kane validation
 
@@ -487,15 +489,15 @@ The builder sandbox cannot deploy, cannot call live third-party services, and ca
 2. **0:10–0:25 — setup.** "This store was built by an agent from a one-paragraph brief. Stuntman takes one journey and performs the humans the agent never tested."
 3. **0:25–0:45 — audit.** Run `node bin/stuntman.mjs audit --live`; five lanes appear; four go green; `impatient` goes red with `2 orders, $98.00`.
 4. **0:45–0:55 — honesty beat.** `refresher` shows `SUSPECTED — 1 of 2 runs failed`; the narrator: "One failure is not a finding. We only report what reproduces."
-5. **0:55–1:10 — brief.** `node bin/stuntman.mjs brief F-001`; show the brief's acceptance checklist and the "do not change the contract" section.
-6. **1:10–1:25 — heal.** Run `heal` with the agent command; the agent patches the checkout; the re-audit goes green.
-7. **1:25–1:30 — lock.** `lock` writes `tests/stuntman-impatient_test.md`; `verify` replays it in seconds. "The hazard is now a test that costs nothing to run."
+5. **0:55–1:08 — brief and lock.** `node bin/stuntman.mjs brief F-001`; show the acceptance checklist and the "do not change the contract" section. `lock` writes `tests/stuntman-impatient_test.md` and `stuntman.lock`; the narrator: "The test exists before the fix, so the agent cannot weaken it."
+6. **1:08–1:24 — heal.** Run `heal` with the agent command; the agent patches the checkout; the re-audit against the locked contract goes green.
+7. **1:24–1:30 — verify.** `verify` replays the locked test in seconds. "The hazard is now a test that costs nothing to run."
 
 **Extended 3–5 minute cut:** add the problem (agent-built apps, missing test author), the confidence rule explainer, the contract hash, one clean persona, and the second app if it shipped. Keep the cold open and the money shot exactly as above.
 
 **Seeded data:** `POST /admin/reset`, then one Harbor Mug at $49.00. The double order is $98.00. Use the fixed test card string and a `buyer@example.test` email. Record the exact commit in the report.
 
-**What judges must see against each criterion:** Ships — the command runs against a real local URL and produces a file. Verified — the typed `order_count = 2`, the charge total, the pack, and the screenshot. Closed loop — the brief, the agent command, the re-audit, the lock. Craft — one command, no dependencies, a readable report, a replayable test.
+**What judges must see against each criterion:** Ships — the command runs against a real local URL and produces a file. Verified — the typed `order_count = 2`, the charge total, the pack, and the screenshot. Closed loop — the brief, the lock written before the fix, the agent command, and the re-audit. Craft — one command, no dependencies, a readable report, a replayable test.
 
 **What not to show:** do not show the patch before the live fix; do not show fixture mode as live; do not show a two-tab persona (it is out of scope); do not claim the report extracts live screenshots if `unzip` was unavailable; do not claim a second app if it was cut.
 
@@ -515,7 +517,7 @@ The builder sandbox cannot deploy, cannot call live third-party services, and ca
 - AC-12 `brief F-001` writes `briefs/F-001.md` and `briefs/F-001.json` containing the behaviour, invariant, observed value, evidence, repro command, acceptance checklist, suspects, and do-not list.
 - AC-13 `heal F-001 --agent-cmd "<cmd>"` substitutes `{brief}` with the absolute path, runs the command in the project root, and re-audits only that persona twice.
 - AC-14 `heal` exits 0 with `CLEAN` when the hazard is gone, 1 with `STILL REPRODUCIBLE` when it is confirmed again, and 2 when the agent command fails or the re-audit is inconclusive.
-- AC-15 `lock` writes one `tests/stuntman-<persona>_test.md` per confirmed hazard with only documented frontmatter keys, an H1 title, and one H2 per step.
+- AC-15 `lock` reads the most recent report with at least one confirmed finding (or the `--run` directory), then writes one `tests/stuntman-<persona>_test.md` per confirmed hazard with only documented frontmatter keys, an H1 title, and one H2 per step.
 - AC-16 `stuntman.lock` contains `contract_hash`, `journey_hash`, `observations_hash`, `personas_hash`, the audited commit, the persona versions, and the test paths.
 - AC-17 `audit` recomputes the hashes, exits 2 on a mismatch, names the changed section, and explains how to update the lock; `--allow-contract-change` overrides.
 - AC-18 `verify --live` runs each locked test with `kane-cli testmd run <path> --agent`, waits for `test_md_done`, and prints PASS or FAIL with the duration and share URL when present.
