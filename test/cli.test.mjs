@@ -22,7 +22,7 @@ test('AC-04/08/09/10/11 fixture audit: exit 1, confirmed impatient, suspected re
   const dir = tmpProject();
   const r = await cli(dir, ['audit', '--fixture-state', 'broken']);
   assert.equal(r.code, 1);
-  assert.match(r.out, /impatient CONFIRMED — 2 orders, \$98\.00 charged/);
+  assert.match(r.out, /impatient CONFIRMED — final_heading = "Cart" \(1 order, \$49\.00 charged\)/);
   assert.match(r.out, /refresher suspected/);
   assert.match(r.out, /FIXTURE/);
   const run = latestRun(dir);
@@ -56,7 +56,7 @@ test('AC-12 brief writes md + json with the required sections; suspected hazards
   assert.equal(r.code, 0);
   const b = JSON.parse(fs.readFileSync(path.join(latestRun(dir), 'briefs', 'F-001.json'), 'utf8'));
   for (const k of ['behaviour', 'invariant', 'observed', 'evidence', 'reproduce', 'acceptance', 'suspects', 'do_not']) assert.ok(b[k], k);
-  assert.match(b.observed.text, /2 orders, \$98\.00/);
+  assert.match(b.observed.text, /final_heading = "Cart"/);
   const md = fs.readFileSync(path.join(latestRun(dir), 'briefs', 'F-001.md'), 'utf8');
   assert.match(md, /## Do not/); assert.match(md, /stuntman\.lock/); assert.match(md, /- \[ \]/);
   assert.equal((await cli(dir, ['brief', 'F-002'])).code, 2);
@@ -71,12 +71,12 @@ test('AC-15/16 lock writes the test and the lock; AC-17 contract change makes au
   assert.deepEqual(keys, ['mode', 'url', 'tags', 'max_steps', 'timeout', 'code_export']);
   assert.match(t, /^# Stuntman:/m);
   const h2 = t.match(/^## /gm); assert.ok(h2.length >= 5);
-  assert.match(t, /assert that 'order_count' equals 1/);
+  assert.match(t, /assert that 'final_heading' equals Order confirmed/);
   const lock = JSON.parse(fs.readFileSync(path.join(dir, 'stuntman.lock'), 'utf8'));
   for (const k of ['contract_hash', 'journey_hash', 'observations_hash', 'personas_hash', 'audited_commit', 'personas', 'tests']) assert.ok(lock[k], k);
   assert.equal((await cli(dir, ['lock'])).code, 2); // already locked
   // weaken the persona: audit must refuse and name the section
-  const pf = path.join(dir, 'personas', 'impatient.json'); const p = JSON.parse(fs.readFileSync(pf, 'utf8')); p.invariant.equals = 2;
+  const pf = path.join(dir, 'personas', 'impatient.json'); const p = JSON.parse(fs.readFileSync(pf, 'utf8')); p.invariant.equals = 'Cart';
   fs.writeFileSync(pf, JSON.stringify(p));
   const bad = await cli(dir, ['audit', '--fixture-state', 'fixed']);
   assert.equal(bad.code, 2); assert.match(bad.err, /personas/); assert.match(bad.err, /--allow-contract-change/);
@@ -98,7 +98,7 @@ test('AC-13/14 heal: CLEAN (exit 0) in fixed state, STILL REPRODUCIBLE (exit 1) 
   const dir2 = tmpProject(); await cli(dir2, ['audit', '--fixture-state', 'broken']); await cli(dir2, ['lock']);
   const ok = await cli(dir2, ['heal', 'F-001', '--agent-cmd', 'node demo/agent-fix.mjs {brief}', '--fixture-state', 'fixed']);
   assert.equal(ok.code, 0); assert.match(ok.out, /CLEAN — the hazard is no longer reproducible/);
-  assert.match(fs.readFileSync(path.join(dir2, 'demo/app/server.mjs'), 'utf8'), /nonce/); // the stand-in agent applied the patch
+  assert.match(fs.readFileSync(path.join(dir2, 'demo/app/server.mjs'), 'utf8'), /placing/); // the stand-in agent applied the patch
   const dir3 = tmpProject(); await cli(dir3, ['audit', '--fixture-state', 'broken']); await cli(dir3, ['lock']);
   assert.equal((await cli(dir3, ['heal', 'F-001', '--agent-cmd', 'node -e "process.exit(5)"', '--fixture-state', 'fixed'])).code, 2);
 });

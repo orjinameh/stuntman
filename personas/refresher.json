@@ -4,6 +4,10 @@
   "name": "Refresher",
   "behaviour": "You are a nervous customer. Click the Pay button once, and while the page is still loading press the browser reload button. If the browser asks whether to resend the form, confirm.",
   "severity": "P1",
-  "invariant": { "observation": "order_count", "equals": 1, "reason": "Reloading mid-payment must not create a second order." },
-  "notes": "Reload immediately after clicking Pay, before the confirmation page has fully rendered."
+  "invariant": {
+    "observation": "final_heading",
+    "equals": "Order confirmed",
+    "reason": "Reloading while the payment is in flight must still end on the order confirmation page."
+  },
+  "notes": "Reload immediately after clicking Pay, before the confirmation page has rendered. Confirm the resubmit prompt if one appears."
 }

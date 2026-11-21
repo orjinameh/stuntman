@@ -10,8 +10,14 @@ export function judgeRun(run, invariant) {
     // A missing observation never confirms anything, and a pass without the value proves nothing.
     return { kind: 'missing', note: `observation '${invariant.observation}' was not captured` };
   }
-  const observed = parseNumber(raw);
   const expected = parseNumber(invariant.equals);
+  if (expected === null) {
+    // Text invariant (e.g. the heading of the page the customer ended on): compare normalised text.
+    const norm = (v) => String(v).trim().replace(/\s+/g, ' ').toLowerCase();
+    if (norm(raw) !== norm(invariant.equals)) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}=${norm(raw)}`, note: `${invariant.observation} was "${raw}", expected "${invariant.equals}"` };
+    return { kind: 'ok', observed: String(raw) };
+  }
+  const observed = parseNumber(raw);
   if (observed === null) return { kind: 'missing', note: `observation '${invariant.observation}' is not numeric: ${raw}` };
   if (observed !== expected) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}=${observed}`, note: `${invariant.observation} was ${raw}, expected ${invariant.equals}` };
   return { kind: 'ok', observed: String(raw) };

@@ -14,7 +14,7 @@ export function testMarkdown(config, persona) {
   steps.push(['Open the store', `Open ${base}${config.journey.entry}. If the application has a reset or demo-data control, leave it alone.`]);
   config.journey.steps.forEach((s, i) => steps.push([`Journey step ${i + 1}`, s]));
   steps.push([`Perform the ${persona.name} behaviour`, `${persona.behaviour}${persona.notes ? ' ' + persona.notes : ''}`]);
-  steps.push([`Observe and assert ${inv.observation}`, `Open ${base}${obs.url}. ${obs.instruction} Then assert that '${inv.observation}' equals ${inv.equals}. ${inv.reason} Do not retry or fix anything.`]);
+  steps.push([`Observe and assert ${inv.observation}`, `${obs.url ? `Open ${base}${obs.url}. ${obs.instruction}` : `Without leaving or reloading the page you are on, ${obs.instruction.charAt(0).toLowerCase()}${obs.instruction.slice(1)}`} Then assert that '${inv.observation}' equals ${inv.equals}. ${inv.reason} Do not retry or fix anything.`]);
   return `${frontmatter}\n\n# Stuntman: ${persona.name} — ${config.journey.title}\n\n${steps.map(([h, b]) => `## ${h}\n\n${b}\n`).join('\n')}`;
 }
 

@@ -23,7 +23,7 @@ export function validateConfig(cfg) {
   need(/^[a-z0-9-]+$/.test(j.id), "journey.id must match ^[a-z0-9-]+$");
   need(Array.isArray(j.steps) && j.steps.length > 0, "journey.steps must be a non-empty array");
   need(Array.isArray(cfg.observations) && cfg.observations.length > 0, "'observations' must be a non-empty array");
-  for (const o of cfg.observations) need(o.name && o.url && o.instruction, "every observation needs 'name', 'url', 'instruction'");
+  for (const o of cfg.observations) need(o.name && o.instruction, "every observation needs 'name' and 'instruction' ('url' is optional: without it the value is read from the page the persona ended on)");
   need(Array.isArray(cfg.personas) && cfg.personas.length > 0, "'personas' must be a non-empty array of ids");
   const b = cfg.budget || {};
   for (const k of ['max_credits', 'estimated_credits_per_run', 'max_steps', 'timeout_seconds']) {

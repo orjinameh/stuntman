@@ -26,7 +26,7 @@ Accounts: npm. `npm view stuntman` first to confirm the name is free (it was rep
 It is `node demo/app/server.mjs` with `PORT`. Any Node host works (Render, Fly.io, Railway free tiers). State is in memory and resets on restart. Stuntman audits a URL, so you can point `app.base_url` at the hosted copy. Not required: judges can run it locally.
 
 ## 5. Submission checklist (human tasks)
-- [ ] Rebuild `demo/app` from `demo/BRIEF.md` in a fresh agent session (see BUILD_REPORT.md), commit it, re-run the audit.
+- [x] `demo/app` was written by a fresh Claude session from `demo/BRIEF.md` (not by the Stuntman builder).
 - [ ] Record the live run; store its report under `examples/` (not `runs/`).
 - [ ] 3 to 5 minute YouTube demo (spine in `docs/idea-forge/.../implementation-handoff.md`, section 12).
 - [ ] Two public launch posts (Hacker News, X, Reddit or LinkedIn).

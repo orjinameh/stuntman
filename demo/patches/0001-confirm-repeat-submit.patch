@@ -1,0 +1,46 @@
+diff --git a/demo/app/server.mjs b/demo/app/server.mjs
+index 26e96b1..b753d12 100644
+--- a/demo/app/server.mjs
++++ b/demo/app/server.mjs
+@@ -9,7 +9,7 @@ const PRODUCTS = [
+ 
+ let state;
+ function seed() {
+-  state = { products: PRODUCTS.map(p => ({ ...p })), carts: {}, orders: [], charges: [], nextOrderId: 1 };
++  state = { products: PRODUCTS.map(p => ({ ...p })), carts: {}, orders: [], charges: [], nextOrderId: 1, placing: {} };
+ }
+ seed();
+ 
+@@ -111,17 +111,25 @@ const server = http.createServer(async (req, res) => {
+       const email = (form.get('email') || '').trim();
+       const card = (form.get('card') || '').trim();
+       const lines = cartLines(state.carts[sid]);
+-      if (!lines.length) return redirect(res, '/cart');
++      if (!lines.length) {
++        // A repeated submit (double click, reload, Back) must show the order that was just placed, not an empty cart.
++        const placed = state.placing[sid];
++        return redirect(res, placed ? '/orders/' + (await placed) : '/cart');
++      }
+       if (!email || !card) return html(res, page('Checkout', `<h1>Checkout</h1><div class="card">Email and card number are required. <a href="/checkout">Back</a></div>`), 400);
+       // Take the lines and empty the cart before the provider call, so a repeated submit cannot charge twice.
+       delete state.carts[sid];
+       const total = sum(lines);
+-      await sleep(1500); // fake payment provider
+-      const id = state.nextOrderId++;
+-      const at = new Date().toISOString();
+-      state.charges.push({ id: 'ch_' + id, orderId: id, cents: total, at });
+-      state.orders.push({ id, email, lines, totalCents: total, chargedCents: total, at });
+-      return redirect(res, '/orders/' + id);
++      const placing = (async () => {
++        await sleep(1500); // fake payment provider
++        const id = state.nextOrderId++;
++        const at = new Date().toISOString();
++        state.charges.push({ id: 'ch_' + id, orderId: id, cents: total, at });
++        state.orders.push({ id, email, lines, totalCents: total, chargedCents: total, at });
++        return id;
++      })();
++      state.placing[sid] = placing;
++      return redirect(res, '/orders/' + (await placing));
+     }
+ 
+     if (m === 'GET' && path === '/orders') {

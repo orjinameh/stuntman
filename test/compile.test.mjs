@@ -14,9 +14,11 @@ test('AC-02 objective contains url, steps in order, behaviour, store-as, asserti
   const i1 = o.indexOf('1. Add the'); const i2 = o.indexOf('2. Open the cart'); const i3 = o.indexOf('3. Enter buyer');
   assert.ok(i1 > 0 && i2 > i1 && i3 > i2);
   assert.ok(o.includes(impatient.behaviour));
+  assert.match(o, /store its text as 'final_heading'/);
   assert.match(o, /store the number as 'order_count'/);
   assert.match(o, /store the total as 'charged_total'/);
-  assert.match(o, /assert that 'order_count' equals 1/i);
+  assert.ok(o.indexOf("'final_heading'") < o.indexOf("'order_count'"), 'page-local observation is captured before navigating away');
+  assert.match(o, /assert that 'final_heading' equals Order confirmed/i);
   assert.match(o, /Do not retry anything, do not try to fix problems/);
 });
 
@@ -24,7 +26,7 @@ test('AC-03 refuses undeclared observation, missing behaviour, missing store-as'
   const cfg = structuredClone(project.config);
   assert.throws(() => compileObjective(cfg, { ...impatient, invariant: { ...impatient.invariant, observation: 'nope' } }), (e) => e instanceof StuntmanError && /nope/.test(e.message) && /order_count/.test(e.message));
   assert.throws(() => compileObjective(cfg, { ...impatient, behaviour: '' }), /no behaviour/);
-  cfg.observations[0].instruction = 'Count the order rows.';
+  cfg.observations[0].instruction = 'Read the heading.';
   assert.throws(() => compileObjective(cfg, impatient), /store/);
 });
 

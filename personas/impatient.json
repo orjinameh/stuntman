@@ -2,8 +2,12 @@
   "id": "impatient",
   "version": "1.0.0",
   "name": "Impatient customer",
-  "behaviour": "You are an impatient customer. Click the Pay button once, then click it again within one second because the spinner makes you think the first click did not register.",
-  "severity": "P0",
-  "invariant": { "observation": "order_count", "equals": 1, "reason": "One purchase intent must create exactly one order." },
-  "notes": "The second click happens while the first request is still in flight. Do not wait for the confirmation page before clicking again."
+  "behaviour": "You are an impatient customer. Click the Pay button once, then click it again within one second because nothing seems to happen after the first click.",
+  "severity": "P1",
+  "invariant": {
+    "observation": "final_heading",
+    "equals": "Order confirmed",
+    "reason": "A customer who has paid must end on the order confirmation page, not an empty cart."
+  },
+  "notes": "The second click happens while the first request is still in flight (the shop's payment step takes a moment). Do not wait for the confirmation page before clicking again."
 }

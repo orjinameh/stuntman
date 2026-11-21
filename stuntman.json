@@ -1,6 +1,12 @@
 {
   "version": 1,
-  "app": { "name": "Corner Store", "base_url": "http://localhost:3000", "suspects": ["demo/app/server.mjs"] },
+  "app": {
+    "name": "Corner Store",
+    "base_url": "http://localhost:3000",
+    "suspects": [
+      "demo/app/server.mjs"
+    ]
+  },
   "journey": {
     "id": "buy-a-mug",
     "title": "Buy a mug as a guest",
@@ -13,10 +19,36 @@
     "success_text": "Order confirmed"
   },
   "observations": [
-    { "name": "order_count", "url": "/orders", "instruction": "Count the order rows on the orders page and store the number as 'order_count'." },
-    { "name": "charged_total", "url": "/orders", "instruction": "Add up every charge amount shown on the orders page and store the total as 'charged_total'." }
+    {
+      "name": "final_heading",
+      "instruction": "Read the main heading (h1) of the page you are on and store its text as 'final_heading'."
+    },
+    {
+      "name": "order_count",
+      "url": "/orders",
+      "instruction": "Count the order rows on the orders page (not the header row) and store the number as 'order_count'."
+    },
+    {
+      "name": "charged_total",
+      "url": "/orders",
+      "instruction": "Add up every amount in the Charged column of the orders page and store the total as 'charged_total'."
+    }
   ],
-  "personas": ["impatient", "refresher", "back-button", "slow-submit", "returning"],
-  "budget": { "max_credits": 400, "estimated_credits_per_run": 25, "max_steps": 40, "timeout_seconds": 180 },
-  "kane": { "bin": "kane-cli", "headless": false }
+  "personas": [
+    "impatient",
+    "refresher",
+    "back-button",
+    "slow-submit",
+    "returning"
+  ],
+  "budget": {
+    "max_credits": 400,
+    "estimated_credits_per_run": 25,
+    "max_steps": 40,
+    "timeout_seconds": 180
+  },
+  "kane": {
+    "bin": "kane-cli",
+    "headless": false
+  }
 }

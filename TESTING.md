@@ -1,9 +1,9 @@
 # TESTING
 
-Tick each box. "Auto" items are covered by `npm test` (39 offline tests, no network).
+Tick each box. "Auto" items are covered by `npm test` (40 offline tests, no network).
 
 ## A. Automated
-- [ ] `npm test` passes (39 tests)
+- [ ] `npm test` passes (40 tests)
 - [ ] `npm ls --prod` prints no dependencies (AC-25)
 - [ ] `node bin/stuntman.mjs audit --fixture-state broken` exits 1 with `impatient CONFIRMED` (AC-04)
 
@@ -14,17 +14,17 @@ node bin/stuntman.mjs brief F-001
 node bin/stuntman.mjs lock
 node bin/stuntman.mjs heal F-001 --agent-cmd 'node demo/agent-fix.mjs {brief}' --fixture-state fixed ; echo "exit=$?"   # 0, CLEAN
 node bin/stuntman.mjs verify --fixture ; echo "exit=$?"               # 0, PASS, replayed from fixture
-git checkout demo/app/server.mjs && rm -rf tests stuntman.lock runs   # reset
+git apply -R demo/patches/0001-confirm-repeat-submit.patch && rm -rf tests stuntman.lock runs   # reset (the agent-fix step patched the app)
 ```
 - [ ] Open `runs/<ts>/report.html` from disk: FIXTURE badge, finding card, no external requests (AC-11, AC-27)
-- [ ] Edit `personas/impatient.json` (`equals`: 2), run `audit`: exit 2 naming `personas` (AC-17); `git checkout personas`
+- [ ] Edit `personas/impatient.json` (`equals`: `Cart`), run `audit`: exit 2 naming `personas` (AC-17); `git checkout personas`
 
 ## C. Manual live checklist (needs Chrome and a TestMu AI account; NOT run by the builder)
 - [ ] `kane-cli whoami` and `kane-cli balance` look right
-- [ ] `node demo/app/server.mjs &` then `node bin/stuntman.mjs audit --live` completes; `impatient` confirms with `order_count = 2`
+- [ ] `node demo/app/server.mjs &` then `node bin/stuntman.mjs audit --live` completes; `impatient` confirms with `final_heading = "Cart"` (if it comes back clean, record that in `LIVE_RUN.md`; it is a real result)
 - [ ] Report contains a `session_dir`; with `unzip` installed it embeds a screenshot from the `.evidence` pack (AC-30)
 - [ ] `brief`, `lock`, then `kane-cli testmd run tests/stuntman-impatient_test.md --agent` accepts the emitted file (frontmatter keys, H2 steps) and emits `test_md_done`
-- [ ] Apply the fix (`git apply demo/patches/0001-idempotent-checkout.patch`, restart the app), re-audit: clean; `verify --live` PASS
+- [ ] Apply the fix (`git apply demo/patches/0001-confirm-repeat-submit.patch`, restart the app), re-audit: clean; `verify --live` PASS
 - [ ] Record results in `LIVE_RUN.md`
 
 ## D. Acceptance criteria map
@@ -51,8 +51,8 @@ git checkout demo/app/server.mjs && rm -rf tests stuntman.lock runs   # reset
 | AC-18 | verify --live parses `test_md_done` | auto vs test double; real Kane: section C |
 | AC-19 | verify --fixture | auto: `cli.test.mjs` |
 | AC-20 | demo app routes and seed | auto: `demo.test.mjs` |
-| AC-21 | double submit gives two orders | auto: `demo.test.mjs` |
-| AC-22 | patch applies, one order | auto: `demo.test.mjs` |
+| AC-21 | double submit: one order, one response redirects to an empty cart | auto: `demo.test.mjs` |
+| AC-22 | patch applies; repeat submit lands on the confirmation | auto: `demo.test.mjs` |
 | AC-23 | persona packs and loader | auto: `compile.test.mjs` |
 | AC-24 | clean clone, fixture audit | manual: section B in a fresh clone |
 | AC-25 | zero dependencies | auto + `npm ls --prod` |

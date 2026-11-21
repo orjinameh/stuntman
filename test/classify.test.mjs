@@ -40,3 +40,12 @@ test('heal re-audit verdicts', () => {
   assert.equal(classifyHeal(persona, [run('failed', 2), run('passed', 1)]).verdict, 'suspected');
   assert.equal(classifyHeal(persona, [run('error'), run('passed', 1)]).verdict, 'inconclusive');
 });
+
+test('text invariants compare normalised text and confirm on the same typed value', () => {
+  const t = { id: 'impatient', invariant: { observation: 'final_heading', equals: 'Order confirmed', reason: 'r' } };
+  const r = (status, h) => ({ status, values: h === undefined ? {} : { final_heading: h } });
+  assert.equal(judgeRun(r('passed', '  order   CONFIRMED '), t.invariant).kind, 'ok');
+  assert.equal(classify(t, [r('failed', 'Cart'), r('failed', 'cart')]).verdict, 'confirmed');
+  assert.equal(classify(t, [r('failed', 'Cart'), r('failed', 'Shop')]).verdict, 'suspected');
+  assert.equal(classify(t, [r('failed')]).verdict, 'inconclusive');
+});

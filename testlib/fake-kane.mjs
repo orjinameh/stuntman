@@ -12,5 +12,5 @@ if (args[0] === 'testmd') {
 }
 process.stdout.write('{"type":"step","summary":"hello"}\n{broken json\n');
 const bad = mode === 'double';
-process.stdout.write(JSON.stringify({ type: 'run_end', status: bad ? 'failed' : 'passed', reason: bad ? 'Assertion failed: order_count was 2, expected 1' : 'ok', duration: 3.3, credits: 20, final_state: { order_count: bad ? '2' : '1', charged_total: bad ? '$98.00' : '$49.00' }, session_dir: '/tmp/none' }) + '\n');
+process.stdout.write(JSON.stringify({ type: 'run_end', status: bad ? 'failed' : 'passed', reason: bad ? 'Assertion failed: final_heading was Cart' : 'ok', duration: 3.3, credits: 20, final_state: { final_heading: bad ? 'Cart' : 'Order confirmed', order_count: '1', charged_total: '$49.00' }, session_dir: '/tmp/none' }) + '\n');
 process.exit(bad ? 1 : 0);

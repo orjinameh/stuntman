@@ -7,10 +7,15 @@ const VERDICT_LABEL = { confirmed: 'CONFIRMED', suspected: 'suspected', clean: '
 export function observedText(lane) {
   const last = lane.runs[0];
   if (!last || !last.values) return '—';
-  const oc = last.values.order_count; const ct = last.values.charged_total;
-  if (oc !== undefined && ct !== undefined) return `${oc} ${Number(oc) === 1 ? 'order' : 'orders'}, ${ct} charged`;
-  const v = last.values[lane.invariant.observation];
-  return v === undefined || v === null ? '—' : `${lane.invariant.observation} = ${v}`;
+  const v = last.values;
+  const inv = lane.invariant;
+  const oc = v.order_count; const ct = v.charged_total;
+  const tally = oc !== undefined && ct !== undefined ? `${oc} ${Number(oc) === 1 ? 'order' : 'orders'}, ${ct} charged` : null;
+  if (inv.observation === 'order_count' && tally) return tally;
+  const val = v[inv.observation];
+  if (val === undefined || val === null) return '—';
+  const shown = typeof inv.equals === 'number' ? `${inv.observation} = ${val}` : `${inv.observation} = "${val}"`;
+  return tally ? `${shown} (${tally})` : shown;
 }
 
 function colorVerdict(v, s) {

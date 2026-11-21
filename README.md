@@ -1,6 +1,6 @@
 # Stuntman
 
-**A customer clicked Pay twice. Your store charged them twice. Your agent's tests passed.**
+**A customer clicked Pay twice. The payment went through. They landed on an empty cart with no confirmation. Your agent's tests passed.**
 
 Your agent tested the happy path. Stuntman plays everyone else.
 
@@ -11,16 +11,18 @@ Built for the KaneCLI Online Hackathon (TestMu AI, 12–26 Nov 2026). Judged on 
 ## The cold open
 
 ```
-persona      sev  verdict    observed                  runs  time   credits  finding
-───────────  ───  ─────────  ────────────────────────  ────  ─────  ───────  ───────
-impatient    P0   CONFIRMED  2 orders, $98.00 charged  2     81.0s  35       F-001
-refresher    P1   suspected  2 orders, $98.00 charged  2     80.5s  35       —
-back-button  P0   clean      1 order, $49.00 charged   1     52.3s  21       —
-slow-submit  P0   clean      1 order, $49.00 charged   1     47.1s  20       —
-returning    P2   clean      2 orders, $98.00 charged  1     63.0s  24       —
+persona      sev  verdict    observed                                          runs  finding
+───────────  ───  ─────────  ────────────────────────────────────────────────  ────  ───────
+impatient    P1   CONFIRMED  final_heading = "Cart" (1 order, $49.00 charged)  2     F-001
+refresher    P1   suspected  final_heading = "Cart" (1 order, $49.00 charged)  2     —
+back-button  P0   clean     1 order, $49.00 charged                           1     —
+slow-submit  P0   clean     1 order, $49.00 charged                           1     —
+returning    P2   clean     2 orders, $98.00 charged                          1     —
 ```
 
-One purchase. Two orders. `refresher` failed once in two runs, so it is only *suspected*: **one failure is not a finding**.
+The customer was charged once, correctly, but ended on "Cart" instead of "Order confirmed". Someone who sees an empty cart after paying assumes it failed and may pay again. `refresher` failed once in two runs, so it is only *suspected*: **one failure is not a finding**.
+
+The demo store (`demo/app`) was written by a fresh Claude session from `demo/BRIEF.md`. It already protects against a double charge; the hazard Stuntman targets is the screen the customer is left on. The fixture table is a prediction from reading that code, and only a live Kane run can confirm it.
 
 > **Honesty note.** The table above comes from the offline **fixture mode**: hand-authored files in Kane's documented `run_end` shape, so anyone can reproduce the flow with no account. It is a deterministic demo of the classifier, report, brief, lock and heal loop. It is **not** live Kane evidence, and every report says `FIXTURE` on it. Live mode (`--live`) is implemented against the documented Kane CLI interface but has **not been run against a real Kane install yet**: see `BUILD_REPORT.md` and `LIVE_RUN.md`.
 
@@ -29,7 +31,7 @@ One purchase. Two orders. `refresher` failed once in two runs, so it is only *su
 Node 20+ and git.
 
 ```bash
-npm test                                          # 39 offline tests
+npm test                                          # 40 offline tests
 node bin/stuntman.mjs audit --fixture-state broken   # exits 1: impatient CONFIRMED
 node bin/stuntman.mjs brief F-001                 # repair brief for a coding agent
 node bin/stuntman.mjs lock                        # locks the contract BEFORE the fix
@@ -47,7 +49,7 @@ Open `runs/<timestamp>/report.html` (one file, no external requests). A pre-gene
 ```bash
 npm install -g @testmuai/kane-cli          # Kane 0.10.7, needs Chrome
 kane-cli login                             # or: kane-cli login --username <u> --access-key <k>
-node demo/app/server.mjs &                 # the storefront under test, port 3000
+node demo/app/server.mjs &                 # the storefront under test, port 3000 (restart it between runs: state is in memory)
 node bin/stuntman.mjs audit --live         # 5 personas, failures repeated once
 node bin/stuntman.mjs brief F-001 && node bin/stuntman.mjs lock
 node bin/stuntman.mjs heal F-001 --agent-cmd '<your agent cli> "$(cat {brief})"' --live
@@ -79,8 +81,8 @@ Kane uploads runs to your TestMu AI account by default. The demo app is localhos
 
 | id | behaviour | invariant | sev |
 |---|---|---|---|
-| `impatient` | clicks Pay, clicks again within a second | `order_count = 1` | P0 |
-| `refresher` | reloads while the payment is in flight | `order_count = 1` | P1 |
+| `impatient` | clicks Pay, clicks again within a second | ends on the page headed `Order confirmed` | P1 |
+| `refresher` | reloads while the payment is in flight | ends on the page headed `Order confirmed` | P1 |
 | `back-button` | pays, then goes Back and submits again | `order_count = 1` | P0 |
 | `slow-submit` | waits two seconds, then retries Pay | `order_count = 1` | P0 |
 | `returning` | two deliberate purchases (control) | `order_count = 2` | P2 |
@@ -110,7 +112,7 @@ Exit codes: `0` clean/success · `1` confirmed hazard or failed verify/heal · `
 - Kane's agentic runs are stochastic; the two-pass rule reduces false findings but cannot remove them.
 - One page per run: no two-tab persona, no network throttling (`slow-submit` uses plain waiting).
 - Desktop web only. Windows is expected to work in fixture mode; macOS/Linux are the supported live platforms.
-- The demo storefront's bug is real but was not written by a fresh agent session from `demo/BRIEF.md`; see `BUILD_REPORT.md` for how to rebuild it that way before recording.
+- The demo hazard (paid, then shown an empty cart) is predicted from reading `demo/app/server.mjs`. Whether Kane's agent actually triggers it is unknown until a live run; if `impatient` comes back clean, that is a real result, not a bug in Stuntman.
 
 ## Layout
 
@@ -118,7 +120,7 @@ Exit codes: `0` clean/success · `1` confirmed hazard or failed verify/heal · `
 bin/stuntman.mjs          CLI entry          src/        compiler, classifier, runners, report, brief, lock, heal, verify
 personas/*.json           versioned packs    fixtures/   offline run_end transcripts (broken / fixed)
 demo/app/server.mjs       storefront (the demo, not the product)   demo/BRIEF.md  the brief it was built from
-demo/patches + agent-fix  reference repair + stand-in agent         demo/second/   second app, other hazard
+demo/patches + agent-fix  reference repair (confirmation on repeat submit) + stand-in agent         demo/second/   second app, other hazard
 docs/idea-forge/          brief and handoff this was built from
 ```
 

@@ -24,7 +24,9 @@ export function compileObjective(config, persona) {
   lines.push(`Human behaviour to perform while doing it: ${persona.behaviour}`);
   if (persona.notes) lines.push(`Detail: ${persona.notes}`);
   lines.push('When the journey and the behaviour are finished, record the observations:');
-  for (const o of config.observations) lines.push(`- Open ${base}${o.url}. ${o.instruction}`);
+  // Observations without a url are read from the page the persona ended on, so they come first, before any navigation.
+  const ordered = [...config.observations.filter((o) => !o.url), ...config.observations.filter((o) => o.url)];
+  for (const o of ordered) lines.push(o.url ? `- Then open ${base}${o.url}. ${o.instruction}` : `- Without leaving or reloading the page you are on, ${o.instruction.charAt(0).toLowerCase()}${o.instruction.slice(1)}`);
   lines.push(`Then assert that '${inv.observation}' equals ${inv.equals}. Reason: ${inv.reason}`);
   lines.push('Do not retry anything, do not try to fix problems, and do not stop to ask questions. Stop after the assertion.');
   return lines.join('\n');

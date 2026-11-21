@@ -19,9 +19,9 @@
     ]
   },
   "commit": "18806b2",
-  "started_at": "2026-11-21T00:33:19.226Z",
-  "finished_at": "2026-11-21T00:33:19.281Z",
-  "contract_hash": "4db4060ea947525be1d251f6efd6011a132bc6ee2f4ecee5f2f61624393cb62b",
+  "started_at": "2026-11-21T05:43:38.919Z",
+  "finished_at": "2026-11-21T05:43:38.977Z",
+  "contract_hash": "3d4a9059728261201fb4683e0e801edb35854baacf84818cd288a582214c2998",
   "summary": {
     "confirmed": 1,
     "suspected": 1,
@@ -35,14 +35,14 @@
     {
       "id": "impatient",
       "name": "Impatient customer",
-      "severity": "P0",
+      "severity": "P1",
       "verdict": "confirmed",
-      "basis": "2 of 2 runs failed with the same typed violation (order_count was 2, expected 1)",
-      "observed": "2",
+      "basis": "2 of 2 runs failed with the same typed violation (final_heading was \"Cart\", expected \"Order confirmed\")",
+      "observed": "Cart",
       "invariant": {
-        "observation": "order_count",
-        "equals": 1,
-        "reason": "One purchase intent must create exactly one order."
+        "observation": "final_heading",
+        "equals": "Order confirmed",
+        "reason": "A customer who has paid must end on the order confirmation page, not an empty cart."
       },
       "runs": [
         {
@@ -50,14 +50,15 @@
           "index": 1,
           "exit_code": 1,
           "status": "failed",
-          "reason": "Assertion failed: order_count was 2, expected 1",
+          "reason": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'",
           "values": {
-            "order_count": "2",
-            "charged_total": "$98.00"
+            "final_heading": "Cart",
+            "order_count": "1",
+            "charged_total": "$49.00"
           },
           "duration": 41.2,
           "credits": 18,
-          "session_dir": "fixtures://buy-a-mug/impatient.run1",
+          "session_dir": "fixtures://buy-a-mug/broken/impatient.run1",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -68,14 +69,15 @@
           "index": 2,
           "exit_code": 1,
           "status": "failed",
-          "reason": "Assertion failed: order_count was 2, expected 1",
+          "reason": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'",
           "values": {
-            "order_count": "2",
-            "charged_total": "$98.00"
+            "final_heading": "Cart",
+            "order_count": "1",
+            "charged_total": "$49.00"
           },
           "duration": 39.8,
           "credits": 17,
-          "session_dir": "fixtures://buy-a-mug/impatient.run2",
+          "session_dir": "fixtures://buy-a-mug/broken/impatient.run2",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -90,11 +92,11 @@
       "severity": "P1",
       "verdict": "suspected",
       "basis": "1 of 2 runs failed",
-      "observed": "2",
+      "observed": "Cart",
       "invariant": {
-        "observation": "order_count",
-        "equals": 1,
-        "reason": "Reloading mid-payment must not create a second order."
+        "observation": "final_heading",
+        "equals": "Order confirmed",
+        "reason": "Reloading while the payment is in flight must still end on the order confirmation page."
       },
       "runs": [
         {
@@ -102,14 +104,15 @@
           "index": 1,
           "exit_code": 1,
           "status": "failed",
-          "reason": "Assertion failed: order_count was 2, expected 1",
+          "reason": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'",
           "values": {
-            "order_count": "2",
-            "charged_total": "$98.00"
+            "final_heading": "Cart",
+            "order_count": "1",
+            "charged_total": "$49.00"
           },
           "duration": 44,
           "credits": 19,
-          "session_dir": "fixtures://buy-a-mug/refresher.run1",
+          "session_dir": "fixtures://buy-a-mug/broken/refresher.run1",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -120,14 +123,15 @@
           "index": 2,
           "exit_code": 0,
           "status": "passed",
-          "reason": "Assertion passed: order_count was 1",
+          "reason": "Assertion passed: final_heading was 'Order confirmed'",
           "values": {
+            "final_heading": "Order confirmed",
             "order_count": "1",
             "charged_total": "$49.00"
           },
           "duration": 36.5,
           "credits": 16,
-          "session_dir": "fixtures://buy-a-mug/refresher.run2",
+          "session_dir": "fixtures://buy-a-mug/broken/refresher.run2",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -156,12 +160,13 @@
           "status": "passed",
           "reason": "Assertion passed: order_count was 1",
           "values": {
+            "final_heading": "Cart",
             "order_count": "1",
             "charged_total": "$49.00"
           },
           "duration": 52.3,
           "credits": 21,
-          "session_dir": "fixtures://buy-a-mug/back-button.run1",
+          "session_dir": "fixtures://buy-a-mug/broken/back-button.run1",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -190,12 +195,13 @@
           "status": "passed",
           "reason": "Assertion passed: order_count was 1",
           "values": {
+            "final_heading": "Order confirmed",
             "order_count": "1",
             "charged_total": "$49.00"
           },
           "duration": 47.1,
           "credits": 20,
-          "session_dir": "fixtures://buy-a-mug/slow-submit.run1",
+          "session_dir": "fixtures://buy-a-mug/broken/slow-submit.run1",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -224,12 +230,13 @@
           "status": "passed",
           "reason": "Assertion passed: order_count was 2",
           "values": {
+            "final_heading": "Order confirmed",
             "order_count": "2",
             "charged_total": "$98.00"
           },
           "duration": 63,
           "credits": 24,
-          "session_dir": "fixtures://buy-a-mug/returning.run1",
+          "session_dir": "fixtures://buy-a-mug/broken/returning.run1",
           "test_url": null,
           "has_run_end": true,
           "mode": "fixture",
@@ -240,5 +247,5 @@
     }
   ],
   "evidence": null,
-  "run_dir": "20261121-003319"
+  "run_dir": "20261121-054338"
 }

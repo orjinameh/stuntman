@@ -9,7 +9,7 @@
    rm stuntman-built.zip
    cd stuntman
    ```
-3. Run the tests: `npm test` (39 tests, no network, no dependencies to install).
+3. Run the tests: `npm test` (40 tests, no network, no dependencies to install).
 4. Run the fixture demo:
    ```bash
    node bin/stuntman.mjs audit --fixture-state broken    # exit 1 is expected
@@ -20,7 +20,7 @@
    ```
 5. Optional: install globally with `npm install -g .` and use `stuntman` instead of `node bin/stuntman.mjs`.
 
-`demo/agent-fix.mjs` modifies `demo/app/server.mjs` (applies the reference patch). To repeat the demo afterwards: `git checkout demo/app/server.mjs && rm -rf tests stuntman.lock runs`.
+`demo/agent-fix.mjs` modifies `demo/app/server.mjs` (applies the reference patch). To repeat the demo afterwards: `git apply -R demo/patches/0001-confirm-repeat-submit.patch && rm -rf tests stuntman.lock runs` (or `git checkout demo/app/server.mjs` once the unpatched app is committed).
 
 ## Live (real browser through Kane CLI)
 
