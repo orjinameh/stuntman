@@ -1,0 +1,42 @@
+{
+  "schema": "stuntman.lock/1",
+  "journey_hash": "d754f090d8657ed9f694e6818772179ea849380aea28437a365fb20ce8875078",
+  "observations_hash": "3a28604bb911b417ccd9871dd1a42ec7a67ee83dc44ecfcddd1cd27a5e15ddfb",
+  "personas_hash": "868506d942c190ded0144c0a3fcff238e5844e904e2d51ec373784a589dc3074",
+  "contract_hash": "02c0049de5e9bf18de3c9946720d95308fd2a37235b114b5afacd648bd6006b9",
+  "audited_commit": "74df2fe",
+  "created_at": "2026-11-21T11:40:38.898Z",
+  "personas": [
+    {
+      "id": "abandoner",
+      "version": "1.0.0"
+    },
+    {
+      "id": "back-button",
+      "version": "1.0.0"
+    },
+    {
+      "id": "impatient",
+      "version": "1.1.0"
+    },
+    {
+      "id": "refresher",
+      "version": "1.0.0"
+    },
+    {
+      "id": "returning",
+      "version": "1.0.0"
+    },
+    {
+      "id": "slow-submit",
+      "version": "1.0.0"
+    },
+    {
+      "id": "stale-total",
+      "version": "1.2.0"
+    }
+  ],
+  "tests": [
+    "tests/stuntman-stale-total_test.md"
+  ]
+}

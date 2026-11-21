@@ -29,6 +29,7 @@ export function compileObjective(config, persona) {
   config.journey.steps.forEach((s, i) => lines.push(`${i + 1}. ${s}`));
   lines.push(`The journey is successful when the page shows "${config.journey.success_text || 'success'}".`);
   lines.push(`Human behaviour to perform while doing it: ${persona.behaviour}`);
+  lines.push('The behaviour takes priority over the journey wording: if it says to do something before a journey step (for example before paying), do that first and only then perform that step, exactly as the behaviour describes.');
   if (persona.notes) lines.push(`Detail: ${persona.notes}`);
   lines.push('When the journey and the behaviour are finished, record the observations:');
   // Observations without a url are read from the page the persona ended on, so they come first, before any navigation.

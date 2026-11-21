@@ -1,0 +1,142 @@
+{
+  "schema": "stuntman.report/1",
+  "mode": "live",
+  "fixture_state": null,
+  "app": {
+    "name": "Corner Store",
+    "base_url": "http://localhost:3000",
+    "suspects": [
+      "demo/app/server.mjs"
+    ],
+    "reset": {
+      "method": "POST",
+      "path": "/admin/reset"
+    }
+  },
+  "journey": {
+    "id": "buy-a-mug",
+    "title": "Buy a mug as a guest",
+    "steps": [
+      "Add the \"Harbor Mug\" to the cart.",
+      "Open the cart and continue to checkout.",
+      "Enter buyer@example.test as the email and pay with the test card 4242 4242 4242 4242."
+    ]
+  },
+  "commit": "74df2fe",
+  "started_at": "2026-11-21T11:32:00.771Z",
+  "finished_at": "2026-11-21T11:39:19.487Z",
+  "contract_hash": "02c0049de5e9bf18de3c9946720d95308fd2a37235b114b5afacd648bd6006b9",
+  "summary": {
+    "confirmed": 1,
+    "suspected": 0,
+    "clean": 0,
+    "inconclusive": 0,
+    "skipped": 0,
+    "credits": 166.5
+  },
+  "budget_ceiling_hit": false,
+  "personas": [
+    {
+      "id": "stale-total",
+      "name": "Stale-total customer",
+      "severity": "P1",
+      "verdict": "confirmed",
+      "basis": "2 of 2 runs failed with the same typed violation (charged_total was 61, more than displayed_total ($49.00))",
+      "observed": "61",
+      "invariant": {
+        "observation": "charged_total",
+        "at_most_observation": "displayed_total",
+        "reason": "A customer must never be charged more than the total they were shown when they paid."
+      },
+      "runs": [
+        {
+          "persona": "stale-total",
+          "index": 1,
+          "exit_code": 1,
+          "status": "failed",
+          "reason": "Final verification failed: \"{{charged_total}} is no more than the value you stored as {{displayed_total}}\"",
+          "values": {
+            "displayed_total": "$49.00",
+            "final_heading": "Orders",
+            "order_count": "1",
+            "charged_total": "61",
+            "updated_total_shown": "true",
+            "checkout_form_fields_empty": "false",
+            "displayed_total_2": "$49.00",
+            "order_confirmed_visible": "true",
+            "payment_refused": "false",
+            "updated_total_instead_of_order": "false",
+            "charged_total_no_more_than_displayed_total": "61"
+          },
+          "duration": 203.6,
+          "credits": 81.26281649999999,
+          "reason_code": "assertion_error.final_verification",
+          "kane_verdict": {
+            "status": "broken",
+            "family": "automation_bug",
+            "root_cause": "The run did not save the amount shown at payment or the sum of charged amounts before making the final check. As a result, it compared placeholder names rather than dollar values."
+          },
+          "session_dir": "/home/codespace/.testmuai/kaneai/sessions/090733c9-893f-4602-8ed8-234fc4720d1b",
+          "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M7YY1C35SEB72Z9EEPQN85ZW/dashboard/share/US_EDSAFHKHPWI16IEVVE7CHPXKRZEODHHTDSS55DBGEKSEXQERFB74EEPMM43QI91Y?type=summary&agentView=true&fqdn=summary-page",
+          "has_run_end": true,
+          "mode": "live",
+          "raw_path": "raw/stale-total.run1.ndjson"
+        },
+        {
+          "persona": "stale-total",
+          "index": 2,
+          "exit_code": 1,
+          "status": "failed",
+          "reason": "Final verification failed: \"{{charged_total}} is no more than the value stored as {{displayed_total}}\"",
+          "values": {
+            "displayed_total": "$49.00",
+            "final_heading": "Orders",
+            "order_count": "1",
+            "charged_total": "$61.00",
+            "updated_total_shown": "true",
+            "checkout_form_fields_empty": "false",
+            "displayed_total_2": "$49.00",
+            "order_confirmed_shown": "true",
+            "payment_refused": "false",
+            "updated_total_instead_of_order": "false",
+            "charged_total_not_more_than_displayed_total": "$61.00"
+          },
+          "duration": 212.4,
+          "credits": 85.23729,
+          "reason_code": "assertion_error.final_verification",
+          "kane_verdict": {
+            "status": "broken",
+            "family": "automation_bug",
+            "root_cause": "The run tried to compare saved amounts, but the values were left as placeholders instead of numbers. The visible order shows a charged amount of $61.00 and an order total of $61.00, so there is no evidence that the customer was charged too much."
+          },
+          "session_dir": "/home/codespace/.testmuai/kaneai/sessions/45334355-2f93-4d30-99da-0539e4e71add",
+          "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M7YY7Y5VTBBT42A8WFPSH5TN/dashboard/share/US_VYZ4D24E9GWFS1BY1DET0NTT729TF0ZO8BHBQDKD2J2F7XCU5R04SARJIG03F6B1?type=summary&agentView=true&fqdn=summary-page",
+          "has_run_end": true,
+          "mode": "live",
+          "raw_path": "raw/stale-total.run2.ndjson"
+        }
+      ],
+      "finding_id": "F-001"
+    }
+  ],
+  "evidence": {
+    "pack": "/home/codespace/.testmuai/kaneai/sessions/090733c9-893f-4602-8ed8-234fc4720d1b/evidence/03ad8983-dbb3-487a-91f3-36d62b98181b.evidence",
+    "screenshot_b64": null,
+    "note": "pack has no step screenshot"
+  },
+  "not_applicable": [
+    {
+      "id": "chaotic-input",
+      "reason": "needs capability: echoes-user-text"
+    },
+    {
+      "id": "coupon-abuser",
+      "reason": "needs capability: coupons"
+    },
+    {
+      "id": "retry-spammer",
+      "reason": "needs capability: payment-can-fail"
+    }
+  ],
+  "run_dir": "20261121-113919"
+}

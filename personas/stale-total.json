@@ -1,12 +1,12 @@
 {
   "id": "stale-total",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "Stale-total customer",
   "requires": [
     "checkout",
     "creates-record"
   ],
-  "behaviour": "You are a customer who changes your mind after seeing the total. On the checkout page, read the Total shown and store its text as 'displayed_total'. Then use the header links to go back to the shop and add one more item of a different product to the cart. Then press the browser Back button until you are on the checkout form again (it may still show the old total) and pay once with that form. If the form now shows an updated total, store that updated total as 'displayed_total' instead.",
+  "behaviour": "You are a customer who changes your mind after seeing the total. IMPORTANT: do NOT click Pay yet. Follow the journey only as far as the checkout form (add the mug, open the cart, continue to checkout, fill in the email and the card number) and stop before clicking Pay. Read the Total shown on the checkout page and store its text as 'displayed_total'. Then use the Corner Store header link to go back to the shop and add one more item of a different product to the cart. Then press the browser Back button until you are on the checkout form again (it may still show the old total; if its fields are empty, enter the same email and card again). On that form, if it now shows an updated total, store the updated total as 'displayed_total' instead. Then click Pay once.",
   "captures": [
     "displayed_total"
   ],
@@ -16,5 +16,5 @@
     "at_most_observation": "displayed_total",
     "reason": "A customer must never be charged more than the total they were shown when they paid."
   },
-  "notes": "Pay at most once. If the shop refuses the payment, or redirects you to an updated total instead of completing the order, do not pay again; just record the observations."
+  "notes": "Click Pay exactly once, on the old checkout form, and only after the steps above. If the shop refuses the payment or sends you to an updated total instead of completing the order, do not pay again; just record the observations."
 }

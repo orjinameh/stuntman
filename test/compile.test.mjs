@@ -19,6 +19,7 @@ test('AC-02 objective contains url, steps in order, behaviour, store-as, asserti
   assert.match(o, /store the total as 'charged_total'/);
   assert.ok(o.indexOf("'final_heading'") < o.indexOf("'order_count'"), 'page-local observation is captured before navigating away');
   assert.match(o, /assert that 'final_heading' equals Order confirmed/i);
+  assert.match(o, /The behaviour takes priority over the journey wording/);
   assert.match(o, /Do not retry anything, do not try to fix problems/);
 });
 
