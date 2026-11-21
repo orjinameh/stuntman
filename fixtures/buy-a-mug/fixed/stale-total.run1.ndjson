@@ -1,0 +1,6 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Opened the app"}
+{"type": "step", "summary": "Completed the journey"}
+{"type": "step", "summary": "Performed persona behaviour"}
+{"type": "step", "summary": "Recorded observations"}
+{"type": "run_end", "status": "passed", "reason": "Assertion passed", "one_liner": "Assertion passed", "summary": "Assertion passed", "duration": 71.0, "credits_consumed": 27, "context": {"variables": {"displayed_total": {"value": "$61.00"}, "final_heading": {"value": "Order confirmed"}, "order_count": {"value": "1"}, "charged_total": {"value": "$61.00"}}}, "session_dir": "fixtures://buy-a-mug/fixed/stale-total.run1"}

@@ -1,4 +1,5 @@
 import { StuntmanError } from './util.mjs';
+import { assertSentence, refOf } from './invariant.mjs';
 
 const STORE_AS = /store\b[^.]*\bas\s+'[^']+'/i;
 
@@ -9,6 +10,12 @@ export function compileObjective(config, persona) {
   const obs = config.observations.find((o) => o.name === inv.observation);
   if (!obs) {
     throw new StuntmanError(`persona '${persona.id}' invariant names observation '${inv.observation}' which the config does not declare (declared: ${config.observations.map((o) => o.name).join(', ')})`);
+  }
+  if (refOf(inv)) {
+    const ref = refOf(inv);
+    const declaredEq = config.observations.some((o) => o.name === ref) || (persona.captures || []).includes(ref);
+    if (!declaredEq) throw new StuntmanError(`persona '${persona.id}' compares against '${ref}', which neither the config nor the persona captures`);
+    if (!persona.behaviour.includes(`'${ref}'`)) throw new StuntmanError(`persona '${persona.id}' behaviour must say to store a value as '${ref}'`);
   }
   for (const o of config.observations) {
     if (!STORE_AS.test(o.instruction)) throw new StuntmanError(`observation '${o.name}' instruction lacks a "store ... as '<name>'" clause; Kane only keeps values stored that way`);
@@ -27,7 +34,7 @@ export function compileObjective(config, persona) {
   // Observations without a url are read from the page the persona ended on, so they come first, before any navigation.
   const ordered = [...config.observations.filter((o) => !o.url), ...config.observations.filter((o) => o.url)];
   for (const o of ordered) lines.push(o.url ? `- Then open ${base}${o.url}. ${o.instruction}` : `- Without leaving or reloading the page you are on, ${o.instruction.charAt(0).toLowerCase()}${o.instruction.slice(1)}`);
-  lines.push(`Then assert that '${inv.observation}' equals ${inv.equals}. Reason: ${inv.reason}`);
+  lines.push(`Then ${assertSentence(inv)}. Reason: ${inv.reason}`);
   lines.push('Do not retry anything, do not try to fix problems, and do not stop to ask questions. Stop after the assertion.');
   return lines.join('\n');
 }

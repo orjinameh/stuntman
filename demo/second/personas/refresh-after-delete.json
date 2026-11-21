@@ -4,6 +4,13 @@
   "name": "Refresh after delete",
   "behaviour": "You are a careful user who does not trust the screen. After deleting the note, reload the page and look at the list again.",
   "severity": "P1",
-  "invariant": { "observation": "note_count", "equals": 1, "reason": "A deleted note must stay deleted after a reload." },
-  "notes": "The list starts with one seed note, so after adding and deleting \"Buy milk\" exactly one note must remain."
+  "invariant": {
+    "observation": "note_count",
+    "equals": 1,
+    "reason": "A deleted note must stay deleted after a reload."
+  },
+  "notes": "The list starts with one seed note, so after adding and deleting \"Buy milk\" exactly one note must remain.",
+  "requires": [
+    "deletes-record"
+  ]
 }

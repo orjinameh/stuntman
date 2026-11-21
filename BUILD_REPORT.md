@@ -10,7 +10,7 @@
 | P5 docs | done; recorded live run and screen capture **not possible** here |
 | P6 submission hardening | human tasks (repo, video, posts, form) |
 
-All 40 tests pass on Node 22 in the build sandbox. The project declares `node >=20` and uses only Node 20 built-ins, but it was **not run on Node 20**.
+All 50 tests pass on Node 22 in the build sandbox. The project declares `node >=20` and uses only Node 20 built-ins, but it was **not run on Node 20**.
 
 ## Verified vs unverified
 **Verified (automated, offline):** compiler, classifier (numeric and text invariants) and the confidence rule, fixture audit and exit codes, report JSON/HTML (escaping, no external requests), brief, lock and contract refusal, heal, verify (fixture), budget guard, demo storefront behaviour over HTTP (one order, one redirect to an empty cart), the reference patch (`git apply`, a repeat submit lands on the confirmation), second-app audit, evidence extraction from a synthetic pack.
@@ -40,3 +40,12 @@ All 40 tests pass on Node 22 in the build sandbox. The project declares `node >=
 - CI workflow untested on GitHub. The `live` job uses the documented `kane-cli login --username --access-key`.
 - Heal's re-audit in fixture mode only proves the plumbing; whether the agent's fix actually works is proven only by `--live`.
 - Raw NDJSON is capped at 5 MB per run (truncated with a note); per-persona retention across runs is not.
+
+## Live finding (first real Kane run)
+Kane's agent executes actions sequentially and a click returns only after navigation. Personas that need an action *while a request is in flight* (a second click, a reload) can come back `step_not_achievable` and are reported inconclusive, never as findings. The `impatient` persona now asks for one double-click action instead. This is a real limit of the approach; see LIVE_RUN.md.
+
+## Positive control
+The main demo app came back clean in a real Kane run, so a seeded-bug positive control (`demo/control`) was added and labelled as seeded. Whether Kane's double-click makes Chrome send two submits is still unproven until the control is run live.
+
+## Persona expansion and selection
+Added journey-aware persona selection (`capabilities` in `stuntman.json`, `requires` in persona packs, `"personas": ["auto"]`), a two-value invariant (`equals_observation`, used by `stale-total`) and personas `abandoner`, `stale-total`, `chaotic-input` plus two drafts. While adding this I found the working copy already held an earlier partial version of the same feature (config `capabilities`, `selectPersonas`, `src/invariant.mjs`) that I had not accounted for; I kept its conventions and removed my duplicate layer. None of the new personas has been run against real Kane. Fixtures for them show clean results and encode no predicted failures.

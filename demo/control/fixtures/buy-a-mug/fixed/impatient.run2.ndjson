@@ -1,0 +1,7 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Opened store"}
+{"type": "step", "summary": "Added Harbor Mug"}
+{"type": "step", "summary": "Opened checkout"}
+{"type": "step", "summary": "Double-clicked Pay"}
+{"type": "step", "summary": "Opened /orders"}
+{"type": "run_end", "status": "passed", "reason": "Assertion passed: order_count was 1", "one_liner": "Assertion passed: order_count was 1", "summary": "Assertion passed: order_count was 1", "duration": 40.0, "credits_consumed": 17, "context": {"variables": {"order_count": {"value": "1"}, "charged_total": {"value": "$49.00"}}}, "session_dir": "fixtures://control/fixed/impatient.run2"}

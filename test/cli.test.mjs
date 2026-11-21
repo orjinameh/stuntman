@@ -28,7 +28,9 @@ test('AC-04/08/09/10/11 fixture audit: exit 1, confirmed impatient, suspected re
   const run = latestRun(dir);
   const rep = JSON.parse(fs.readFileSync(path.join(run, 'report.json'), 'utf8'));
   assert.equal(rep.mode, 'fixture');
-  assert.deepEqual([rep.summary.confirmed, rep.summary.suspected, rep.summary.clean], [1, 1, 3]);
+  assert.deepEqual([rep.summary.confirmed, rep.summary.suspected, rep.summary.clean], [1, 1, 5]);
+  assert.deepEqual(rep.not_applicable.map((n) => n.id).sort(), ['chaotic-input', 'coupon-abuser', 'retry-spammer']);
+  assert.match(r.out, /not applicable to this journey: chaotic-input \(needs capability: echoes-user-text\)/);
   assert.equal(rep.personas.find((p) => p.id === 'impatient').finding_id, 'F-001');
   assert.equal(rep.personas.find((p) => p.id === 'impatient').runs.length, 2);   // only failures repeated
   assert.equal(rep.personas.find((p) => p.id === 'back-button').runs.length, 1);
@@ -123,8 +125,8 @@ test('AC-19 verify --fixture replays and passes; no lock exits 2', async () => {
 
 test('personas lists the library', async () => {
   const r = await cli(tmpProject(), ['personas']);
-  assert.equal(r.code, 0); for (const id of ['impatient', 'refresher', 'back-button', 'slow-submit', 'returning']) assert.match(r.out, new RegExp(id));
-  assert.equal(JSON.parse((await cli(tmpProject(), ['personas', '--json'])).out).length, 5);
+  assert.equal(r.code, 0); for (const id of ['impatient', 'refresher', 'back-button', 'slow-submit', 'returning', 'abandoner', 'stale-total', 'chaotic-input']) assert.match(r.out, new RegExp(id));
+  assert.equal(JSON.parse((await cli(tmpProject(), ['personas', '--json'])).out).length, 10);
 });
 
 test('second app: a different hazard class on a different journey (AC-28)', async () => {
@@ -132,4 +134,44 @@ test('second app: a different hazard class on a different journey (AC-28)', asyn
   const sub = path.join(dir, 'demo', 'second');
   const r = await cli(sub, ['audit', '--fixture-state', 'broken']);
   assert.equal(r.code, 1); assert.match(r.out, /note_count = 2/);
+});
+
+test('positive control: the seeded-bug app is confirmed by the same pipeline (fixture) and its patched twin is clean', async () => {
+  const dir = tmpProject();
+  const sub = path.join(dir, 'demo', 'control');
+  const bad = await cli(sub, ['audit', '--fixture-state', 'broken']);
+  assert.equal(bad.code, 1); assert.match(bad.out, /impatient CONFIRMED — 2 orders, \$98\.00 charged/);
+  assert.equal((await cli(sub, ['audit', '--fixture-state', 'fixed'])).code, 0);
+});
+
+test('journey-aware selection: the notes app runs only the personas that apply to it and says why the rest do not', async () => {
+  const dir = tmpProject();
+  const r = await cli(path.join(dir, 'demo', 'second'), ['audit', '--fixture-state', 'fixed']);
+  assert.equal(r.code, 0);
+  assert.match(r.out, /chaotic-input/); assert.match(r.out, /refresh-after-delete/);
+  assert.match(r.out, /impatient \(needs observation 'final_heading'/); assert.match(r.out, /stale-total \(needs capability: checkout\)/);
+});
+
+test('stale-total compares the charge with the total that was displayed (equals_observation)', async () => {
+  const { classify } = await import('../src/classify.mjs');
+  const p = { id: 'stale-total', invariant: { observation: 'charged_total', equals_observation: 'displayed_total', reason: 'r' } };
+  const run = (status, charged, shown) => ({ status, values: { charged_total: charged, displayed_total: shown } });
+  assert.equal(classify(p, [run('passed', '$61.00', '$61.00')]).verdict, 'clean');
+  assert.equal(classify(p, [run('failed', '$61.00', '$49.00'), run('failed', '$61.00', '$49.00')]).verdict, 'confirmed');
+  assert.equal(classify(p, [{ status: 'passed', values: { charged_total: '$61.00' } }]).verdict, 'inconclusive');
+});
+
+test('stale-total: a refused charge is safe, an overcharge is a violation (at_most_observation)', async () => {
+  const { classify } = await import('../src/classify.mjs');
+  const { compileObjective } = await import('../src/compile.mjs');
+  const { loadProject } = await import('../src/config.mjs');
+  const { PACKAGE_ROOT } = await import('../src/util.mjs');
+  const project = loadProject(PACKAGE_ROOT);
+  const p = project.personas.find((x) => x.id === 'stale-total');
+  assert.match(compileObjective(project.config, p), /is no more than the value you stored as 'displayed_total'/);
+  const run = (status, charged, shown) => ({ status, values: { charged_total: charged, displayed_total: shown } });
+  assert.equal(classify(p, [run('passed', '61', '$61.00')]).verdict, 'clean');
+  assert.equal(classify(p, [run('passed', '0', '$49.00')]).verdict, 'clean');      // refused: nothing charged
+  assert.equal(classify(p, [run('failed', '61', '$49.00'), run('failed', '61', '$49.00')]).verdict, 'confirmed');
+  assert.equal(classify(p, [run('failed', '61', '$49.00')]).verdict, 'suspected');
 });

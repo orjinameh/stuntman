@@ -1,0 +1,17 @@
+{
+  "id": "abandoner",
+  "version": "1.0.0",
+  "name": "Abandoner",
+  "requires": [
+    "checkout",
+    "creates-record"
+  ],
+  "behaviour": "You are a customer who gets distracted. Reach the checkout page, then leave it: go back to the shop and look around without paying. After a moment return to the cart, continue to checkout again, enter the details and pay once.",
+  "severity": "P2",
+  "invariant": {
+    "observation": "order_count",
+    "equals": 1,
+    "reason": "Leaving checkout and coming back must create exactly one order."
+  },
+  "notes": "Leave checkout by clicking the store name in the header, not by closing the page. Pay exactly once at the end."
+}

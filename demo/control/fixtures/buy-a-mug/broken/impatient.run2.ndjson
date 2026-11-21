@@ -1,0 +1,7 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Opened store"}
+{"type": "step", "summary": "Added Harbor Mug"}
+{"type": "step", "summary": "Opened checkout"}
+{"type": "step", "summary": "Double-clicked Pay"}
+{"type": "step", "summary": "Opened /orders"}
+{"type": "run_end", "status": "failed", "reason": "Assertion failed: order_count was 2, expected 1", "one_liner": "Assertion failed: order_count was 2, expected 1", "summary": "Assertion failed: order_count was 2, expected 1", "duration": 42.0, "credits_consumed": 18, "context": {"variables": {"order_count": {"value": "2"}, "charged_total": {"value": "$98.00"}}}, "session_dir": "fixtures://control/broken/impatient.run2"}

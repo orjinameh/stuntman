@@ -8,6 +8,7 @@ import { classifyHeal } from './classify.mjs';
 import { makeFixtureRunner } from './kane/fixture.mjs';
 import { makeLiveRunner } from './kane/runner.mjs';
 import { compileObjective } from './compile.mjs';
+import { resetApp } from './reset.mjs';
 
 function shQuote(p) {
   return process.platform === 'win32' ? `"${p}"` : `'${p.replace(/'/g, `'\\''`)}'`;
@@ -46,6 +47,7 @@ export async function heal(project, id, { agentCmd, run, live = false, fixtureSt
   const objective = compileObjective(project.config, persona);
   const runs = [];
   for (const index of [1, 2]) {
+    if (live) await resetApp(project.config);
     log(c.dim(`  ▸ re-audit ${persona.id} run ${index}…`));
     runs.push(await runner.run({ persona, index, objective, headless }));
   }

@@ -1,0 +1,6 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Opened the app"}
+{"type": "step", "summary": "Completed the journey"}
+{"type": "step", "summary": "Performed persona behaviour"}
+{"type": "step", "summary": "Recorded observations"}
+{"type": "run_end", "status": "passed", "reason": "Assertion passed", "one_liner": "Assertion passed", "summary": "Assertion passed", "duration": 56.0, "credits_consumed": 22, "context": {"variables": {"final_heading": {"value": "Order confirmed"}, "order_count": {"value": "1"}, "charged_total": {"value": "$49.00"}}}, "session_dir": "fixtures://buy-a-mug/broken/abandoner.run1"}

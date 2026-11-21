@@ -1,0 +1,21 @@
+{
+  "id": "coupon-abuser",
+  "version": "0.1.0",
+  "name": "Coupon abuser",
+  "requires": [
+    "coupons",
+    "checkout"
+  ],
+  "status": "draft",
+  "behaviour": "You are a customer who plays with coupons. On the cart or checkout page apply the coupon code SAVE10, remove it, apply it again. Just before paying, store the Total shown on the page as 'displayed_total'. Then pay once.",
+  "captures": [
+    "displayed_total"
+  ],
+  "severity": "P1",
+  "invariant": {
+    "observation": "charged_total",
+    "equals_observation": "displayed_total",
+    "reason": "The charge must match the total shown after coupon changes."
+  },
+  "notes": "Draft: needs an app with coupons; untested."
+}

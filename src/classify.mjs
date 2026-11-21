@@ -1,14 +1,34 @@
 import { parseNumber } from './util.mjs';
+import { refOf } from './invariant.mjs';
 
 /** A run's relationship to the persona invariant. */
 export function judgeRun(run, invariant) {
   if (run.status === 'error') return { kind: 'error', note: run.reason || 'setup error' };
   if (run.status === 'timeout') return { kind: 'timeout', note: run.reason || 'timed out' };
+  // Kane could not perform the persona's behaviour (e.g. an in-flight second click): the product was never exercised.
+  if (run.reason_code && /step_not_achievable/.test(run.reason_code)) return { kind: 'unachievable', note: `Kane could not perform the persona's behaviour (${run.reason_code}): ${run.reason || ''}`.trim() };
   const raw = run.values ? run.values[invariant.observation] : undefined;
   const have = raw !== undefined && raw !== null && String(raw).trim() !== '';
   if (!have) {
     // A missing observation never confirms anything, and a pass without the value proves nothing.
     return { kind: 'missing', note: `observation '${invariant.observation}' was not captured` };
+  }
+  if (invariant.at_most_observation) {
+    // Harm-style bound: the observed value must not exceed another value stored in the same run (a lower value, e.g. a refused charge, is safe).
+    const other = run.values ? run.values[invariant.at_most_observation] : undefined;
+    const a = parseNumber(raw); const b = parseNumber(other);
+    if (a === null || b === null) return { kind: 'missing', note: `could not compare '${invariant.observation}' with '${invariant.at_most_observation}' (${other === undefined ? 'not captured' : 'not numeric'})` };
+    if (a > b + 0.005) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}>${invariant.at_most_observation}:${a}/${b}`, note: `${invariant.observation} was ${raw}, more than ${invariant.at_most_observation} (${other})` };
+    return { kind: 'ok', observed: String(raw) };
+  }
+  if (invariant.equals_observation) {
+    // Compare two values captured in the same run (e.g. the amount charged vs the total the page displayed).
+    const other = run.values ? run.values[invariant.equals_observation] : undefined;
+    if (other === undefined || other === null || String(other).trim() === '') return { kind: 'missing', note: `observation '${invariant.equals_observation}' was not captured` };
+    const a = parseNumber(raw); const b = parseNumber(other);
+    const same = a !== null && b !== null ? a === b : String(raw).trim().toLowerCase() === String(other).trim().toLowerCase();
+    if (!same) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}!=${invariant.equals_observation}:${a ?? raw}/${b ?? other}`, note: `${invariant.observation} was ${raw} but ${invariant.equals_observation} was ${other}` };
+    return { kind: 'ok', observed: String(raw) };
   }
   const expected = parseNumber(invariant.equals);
   if (expected === null) {
@@ -43,7 +63,7 @@ export function classify(persona, runs) {
   if (first.kind === 'ok') return base('clean', 'invariant held on the first run', first.observed);
   if (first.kind === 'error') return base('inconclusive', `setup error: ${first.note}`);
   if (first.kind === 'timeout') return base('inconclusive', `timeout: ${first.note}`);
-  if (first.kind === 'missing') return base('inconclusive', first.note);
+  if (first.kind === 'missing' || first.kind === 'unachievable') return base('inconclusive', first.note);
   // first is a violation
   if (j.length < 2) return base('suspected', '1 of 1 runs failed; not yet repeated', first.observed);
   const second = j[1];
@@ -58,7 +78,7 @@ export function classify(persona, runs) {
 /** Heal re-audit: both runs are always executed against the locked contract. */
 export function classifyHeal(persona, runs) {
   const j = runs.map((r) => judgeRun(r, persona.invariant));
-  if (j.some((x) => ['error', 'timeout', 'missing'].includes(x.kind))) return { verdict: 'inconclusive', basis: j.find((x) => x.kind !== 'ok' && x.kind !== 'violation').note };
+  if (j.some((x) => ['error', 'timeout', 'missing', 'unachievable'].includes(x.kind))) return { verdict: 'inconclusive', basis: j.find((x) => x.kind !== 'ok' && x.kind !== 'violation').note };
   const bad = j.filter((x) => x.kind === 'violation');
   if (bad.length === 0) return { verdict: 'clean', basis: `${j.length} of ${j.length} re-audit runs honoured the invariant` };
   if (bad.length === j.length && new Set(bad.map((b) => b.key)).size === 1) return { verdict: 'confirmed', basis: `${bad.length} of ${j.length} re-audit runs still fail (${bad[0].note})` };

@@ -1,9 +1,9 @@
 # TESTING
 
-Tick each box. "Auto" items are covered by `npm test` (40 offline tests, no network).
+Tick each box. "Auto" items are covered by `npm test` (50 offline tests, no network).
 
 ## A. Automated
-- [ ] `npm test` passes (40 tests)
+- [ ] `npm test` passes (50 tests)
 - [ ] `npm ls --prod` prints no dependencies (AC-25)
 - [ ] `node bin/stuntman.mjs audit --fixture-state broken` exits 1 with `impatient CONFIRMED` (AC-04)
 

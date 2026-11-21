@@ -1,0 +1,6 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Opened the app"}
+{"type": "step", "summary": "Completed the journey"}
+{"type": "step", "summary": "Performed persona behaviour"}
+{"type": "step", "summary": "Recorded observations"}
+{"type": "run_end", "status": "passed", "reason": "Assertion passed", "one_liner": "Assertion passed", "summary": "Assertion passed", "duration": 26.0, "credits_consumed": 11, "context": {"variables": {"shown_text": {"value": "<b>bold</b> & \"quotes\" \ud83d\ude80"}, "note_count": {"value": "2"}}}, "session_dir": "fixtures://delete-a-note/broken/chaotic-input.run1"}

@@ -5,7 +5,11 @@
     "base_url": "http://localhost:3000",
     "suspects": [
       "demo/app/server.mjs"
-    ]
+    ],
+    "reset": {
+      "method": "POST",
+      "path": "/admin/reset"
+    }
   },
   "journey": {
     "id": "buy-a-mug",
@@ -35,20 +39,22 @@
     }
   ],
   "personas": [
-    "impatient",
-    "refresher",
-    "back-button",
-    "slow-submit",
-    "returning"
+    "auto"
   ],
   "budget": {
-    "max_credits": 400,
+    "max_credits": 800,
     "estimated_credits_per_run": 25,
     "max_steps": 40,
-    "timeout_seconds": 180
+    "timeout_seconds": 300
   },
   "kane": {
     "bin": "kane-cli",
     "headless": false
-  }
+  },
+  "capabilities": [
+    "checkout",
+    "creates-record",
+    "submit-form",
+    "payment"
+  ]
 }

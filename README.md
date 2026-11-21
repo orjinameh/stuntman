@@ -31,7 +31,7 @@ The demo store (`demo/app`) was written by a fresh Claude session from `demo/BRI
 Node 20+ and git.
 
 ```bash
-npm test                                          # 40 offline tests
+npm test                                          # 50 offline tests
 node bin/stuntman.mjs audit --fixture-state broken   # exits 1: impatient CONFIRMED
 node bin/stuntman.mjs brief F-001                 # repair brief for a coding agent
 node bin/stuntman.mjs lock                        # locks the contract BEFORE the fix
@@ -77,17 +77,31 @@ Kane uploads runs to your TestMu AI account by default. The demo app is localhos
 | Setup error, timeout, or the observation value is missing | inconclusive (never confirms) |
 | First run honours the invariant | clean |
 
-## The cast
+## The cast and journey-aware selection
 
-| id | behaviour | invariant | sev |
-|---|---|---|---|
-| `impatient` | clicks Pay, clicks again within a second | ends on the page headed `Order confirmed` | P1 |
-| `refresher` | reloads while the payment is in flight | ends on the page headed `Order confirmed` | P1 |
-| `back-button` | pays, then goes Back and submits again | `order_count = 1` | P0 |
-| `slow-submit` | waits two seconds, then retries Pay | `order_count = 1` | P0 |
-| `returning` | two deliberate purchases (control) | `order_count = 2` | P2 |
+Stuntman does not run every behaviour blindly. Each persona declares what it `requires`; your `stuntman.json` declares the `capabilities` of the journey (`"personas": ["auto"]`). Personas whose requirements are not met are listed as **not applicable** with the reason, and personas whose invariant needs an observation your journey does not declare are skipped the same way.
 
-Add a behaviour by dropping a JSON file in `personas/`: no code change. `node bin/stuntman.mjs personas` lists them. `demo/second/` is a second app with a different hazard class (a delete that comes back after reload) and its own persona, run with `cd demo/second && node ../../bin/stuntman.mjs audit --fixture-state broken`.
+| id | behaviour | invariant | needs | status |
+|---|---|---|---|---|
+| `impatient` | double-clicks Pay | ends on `Order confirmed` | submit-form, creates-record | live-run: clean on `demo/app` |
+| `refresher` | reloads while the payment is in flight | ends on `Order confirmed` | submit-form, creates-record | live: clean (weak: Kane cannot truly reload mid-flight) |
+| `back-button` | pays, goes Back, submits again | `order_count = 1` | submit-form, creates-record | live: clean |
+| `slow-submit` | waits 2 s, retries Pay | `order_count = 1` | submit-form, creates-record | live: inconclusive (not achievable) |
+| `returning` | two deliberate purchases (control) | `order_count = 2` | creates-record, checkout | live: inconclusive (timeout) |
+| `abandoner` | leaves checkout, returns, pays once | `order_count = 1` | checkout, creates-record | live: clean |
+| `stale-total` | changes the cart, goes Back to the old checkout, pays | charge is never more than the total displayed | checkout, creates-record | **live: CONFIRMED on `demo/app`** |
+| `chaotic-input` | submits `<b>bold</b> & "quotes" 🚀` | shown exactly as typed | submit-form, echoes-user-text | draft |
+| `retry-spammer`, `coupon-abuser` | repeated failed payments; coupon toggling | no stray orders; charge matches display | payment-can-fail / coupons | draft, no app to run on yet |
+
+"Untested live" means the pack exists and the offline pipeline handles it, but it has not been run against real Kane. `refresher`, `slow-submit` and the draft packs may come back inconclusive; that is reported honestly, never as a finding.
+
+**Deliberately not built yet:** network dropout, multi-tab checkout, session expiry and cart edits while a payment is in flight. Kane's agent works one step at a time in one tab and cannot cut the network or expire a session, so these would only ever come back inconclusive.
+
+**Scope:** the engine (journey, observations, invariants, personas with `requires`, two-pass confirmation) is not tied to checkout, and `demo/second` runs a non-checkout journey. But only shop-style and note-style journeys have been exercised, so do not read this as "tests any app". Add a behaviour by dropping a JSON file in `personas/`; `node bin/stuntman.mjs personas` lists them with their requirements.
+
+## Positive control
+
+A clean audit only means something if the detector can also catch a bug. `demo/control/` is a store with a **seeded** double-order bug (written by the builder, labelled as such) plus a repaired twin. Run `cd demo/control && PORT=3001 node app/server.mjs &` then `node ../../bin/stuntman.mjs audit --live --headless`. The main demo (`demo/app`, written by a fresh agent session) is the realistic target; the control proves detection.
 
 ## Commands
 

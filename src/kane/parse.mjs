@@ -25,12 +25,21 @@ export function buildRecord({ persona, index, events, exitCode, stderr = '', raw
   const values = {};
   const fs = runEnd && runEnd.final_state && typeof runEnd.final_state === 'object' ? runEnd.final_state : {};
   for (const [k, v] of Object.entries(fs)) values[k] = v === null || v === undefined ? null : String(v);
+  // Real Kane 0.10.7 keeps 'store ... as' values in context.variables.<name>.value (final_state is empty); skip unset ones.
+  const vars = runEnd && runEnd.context && typeof runEnd.context === 'object' && runEnd.context.variables && typeof runEnd.context.variables === 'object' ? runEnd.context.variables : {};
+  for (const [k, v] of Object.entries(vars)) {
+    const val = v && typeof v === 'object' ? v.value : v;
+    if (val !== undefined && val !== null && String(val).trim() !== '' && values[k] === undefined) values[k] = String(val);
+  }
   return {
     persona, index, exit_code: code, status,
-    reason: runEnd ? (runEnd.reason || runEnd.one_liner || runEnd.summary || '') : (stderr.trim().split('\n').pop() || 'no run_end event received'),
+    reason: runEnd ? (runEnd.reason || runEnd.one_liner || runEnd.summary || '') : (stderr.trim().split('\n').filter(Boolean).slice(-6).join(' | ').slice(-600) || 'no run_end event received'),
+    stderr_text: stderr || '',
     values,
     duration: runEnd && typeof runEnd.duration === 'number' ? runEnd.duration : null,
-    credits: runEnd && typeof runEnd.credits === 'number' ? runEnd.credits : 0,
+    credits: runEnd ? (typeof runEnd.credits_consumed === 'number' ? runEnd.credits_consumed : (typeof runEnd.credits === 'number' ? runEnd.credits : 0)) : 0,
+    reason_code: runEnd && runEnd.reason_code ? String(runEnd.reason_code) : null,
+    kane_verdict: runEnd && runEnd.verdict && typeof runEnd.verdict === 'object' ? { status: runEnd.verdict.status || null, family: runEnd.verdict.family || null, root_cause: runEnd.verdict.root_cause || null } : null,
     session_dir: runEnd && runEnd.session_dir ? runEnd.session_dir : sessionDir,
     test_url: runEnd && runEnd.test_url ? runEnd.test_url : null,
     has_run_end: Boolean(runEnd),

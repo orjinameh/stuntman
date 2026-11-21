@@ -32,7 +32,7 @@ test('AC-03 refuses undeclared observation, missing behaviour, missing store-as'
 
 test('AC-23 persona packs are complete and unknown ids list the available ones', () => {
   const lib = loadLibrary(PACKAGE_ROOT);
-  assert.equal(lib.size, 5);
+  assert.equal(lib.size, 10);
   for (const p of lib.values()) for (const k of ['id', 'version', 'name', 'behaviour', 'severity', 'invariant', 'notes']) assert.ok(p[k], `${p.id}.${k}`);
   assert.throws(() => resolvePersonas(['ghost'], lib), (e) => /ghost/.test(e.message) && /impatient/.test(e.message));
   assert.throws(() => resolvePersonas(['../etc'], lib), /unknown persona/);

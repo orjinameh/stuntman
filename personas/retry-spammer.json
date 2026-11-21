@@ -1,0 +1,18 @@
+{
+  "id": "retry-spammer",
+  "version": "0.1.0",
+  "name": "Retry spammer",
+  "requires": [
+    "payment-can-fail",
+    "creates-record"
+  ],
+  "status": "draft",
+  "behaviour": "You are a customer whose payment keeps failing. When a payment attempt fails, retry the payment at least three times.",
+  "severity": "P1",
+  "invariant": {
+    "observation": "order_count",
+    "equals": 0,
+    "reason": "Failed payments must not leave completed orders behind."
+  },
+  "notes": "Draft: needs an app that can fail a payment on demand; untested."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "chaotic-input",
+  "version": "1.0.0",
+  "name": "Chaotic typist",
+  "requires": [
+    "submit-form",
+    "echoes-user-text"
+  ],
+  "status": "draft",
+  "behaviour": "You are a user who types unusual text. In the main text field, enter exactly this text: <b>bold</b> & \"quotes\" 🚀 and submit the form once.",
+  "severity": "P1",
+  "invariant": {
+    "observation": "shown_text",
+    "equals": "<b>bold</b> & \"quotes\" 🚀",
+    "reason": "User text must be shown exactly as typed, never interpreted as markup."
+  },
+  "notes": "Type the text literally, including the angle brackets and the emoji."
+}

@@ -8,6 +8,7 @@ import { estimateCredits } from './budget.mjs';
 import { makeFixtureRunner } from './kane/fixture.mjs';
 import { makeLiveRunner } from './kane/runner.mjs';
 import { extractEvidence } from './evidence.mjs';
+import { resetApp } from './reset.mjs';
 
 export const LOCK_FILE = 'stuntman.lock';
 
@@ -58,9 +59,10 @@ export async function runAudit(project, opts = {}) {
 
   const execute = async (persona, index) => {
     if (live && credits >= config.budget.max_credits) { ceilingHit = true; return null; }
+    if (live) await resetApp(config);
     log(c.dim(`  ▸ ${persona.id} run ${index}…`));
     const rec = await runner.run({ persona, index, objective: objectives.get(persona.id), headless: opts.headless });
-    credits += rec.credits || 0;
+    credits = Math.round((credits + (rec.credits || 0)) * 10) / 10;
     record.runs.push(rec);
     return rec;
   };
@@ -96,7 +98,7 @@ export function buildReport(project, result, { startedAt, finishedAt, runDir }) 
   const hashes = contractHashes(config, project.personas);
   const lanes = result.lanes.map((l) => {
     const runs = l.runs.map((r) => {
-      const { raw_text, ...rest } = r;
+      const { raw_text, stderr_text, ...rest } = r;
       return rest;
     });
     return { ...l, runs };
@@ -114,6 +116,7 @@ export function buildReport(project, result, { startedAt, finishedAt, runDir }) 
     budget_ceiling_hit: result.ceilingHit,
     personas: lanes,
     evidence,
+    not_applicable: project.notApplicable || [],
     run_dir: runDir,
   };
 }
@@ -125,6 +128,7 @@ export function writeRawTranscripts(result, runDir) {
     const rel = `raw/${l.id}.run${r.index}.ndjson`;
     fs.writeFileSync(safeJoin(runDir, rel), r.raw_text || '');
     r.raw_path = rel;
+    if (r.stderr_text) fs.writeFileSync(safeJoin(runDir, `raw/${l.id}.run${r.index}.stderr.txt`), r.stderr_text);
   }
 }
 

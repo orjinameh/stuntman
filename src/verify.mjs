@@ -6,6 +6,7 @@ import { parseNdjson } from './kane/parse.mjs';
 import { kaneBin, spawnKane } from './kane/runner.mjs';
 import { readFixtureRun } from './kane/fixture.mjs';
 import { judgeRun } from './classify.mjs';
+import { resetApp } from './reset.mjs';
 
 export function testPathPersona(rel) {
   const m = path.basename(rel).match(/^stuntman-([a-z0-9-]+)_test\.md$/);
@@ -21,6 +22,7 @@ export async function verify(project, { live = false, log = console.log, headles
   for (const rel of lock.tests) {
     const pid = testPathPersona(rel);
     if (live) {
+      await resetApp(project.config);
       const bin = kaneBin(project.config);
       const args = ['testmd', 'run', rel, '--agent'];
       if (headless || process.env.KANE_HEADLESS === '1') args.push('--headless');

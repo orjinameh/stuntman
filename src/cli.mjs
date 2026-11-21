@@ -132,8 +132,8 @@ async function cmdVerify(cwd, args, out) {
 function cmdPersonas(cwd, args, out) {
   const lib = [...loadLibrary(cwd).values()];
   if (args.json === true) { out(JSON.stringify(lib.map((p) => ({ id: p.id, name: p.name, severity: p.severity, invariant: p.invariant, version: p.version })), null, 2)); return 0; }
-  const rows = lib.map((p) => [p.id, p.name, p.severity, `${p.invariant.observation} = ${p.invariant.equals}`, p.version]);
-  const head = ['id', 'name', 'sev', 'invariant', 'version'];
+  const rows = lib.map((p) => [p.id, p.name, p.severity, `${p.invariant.observation} = ${p.invariant.equals !== undefined ? p.invariant.equals : '<' + p.invariant.equals_observation + '>'}`, (p.requires || []).join(',') || '-', p.status || 'ready']);
+  const head = ['id', 'name', 'sev', 'invariant', 'requires', 'status'];
   const w = head.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)));
   out(head.map((h, i) => h.padEnd(w[i])).join('  '));
   for (const r of rows) out(r.map((x, i) => x.padEnd(w[i])).join('  '));

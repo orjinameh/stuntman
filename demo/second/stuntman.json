@@ -1,17 +1,55 @@
 {
   "version": 1,
-  "app": { "name": "Notes", "base_url": "http://localhost:3100", "suspects": ["demo/second/server.mjs"] },
+  "app": {
+    "name": "Notes",
+    "base_url": "http://localhost:3100",
+    "suspects": [
+      "demo/second/server.mjs"
+    ],
+    "reset": {
+      "method": "POST",
+      "path": "/admin/reset"
+    }
+  },
   "journey": {
     "id": "delete-a-note",
     "title": "Delete a note",
     "entry": "/",
-    "steps": ["Add a note with the text \"Buy milk\".", "Click Delete on the \"Buy milk\" note.", "Confirm that the note disappears from the list."],
+    "steps": [
+      "Add a note with the text \"Buy milk\".",
+      "Click Delete on the \"Buy milk\" note.",
+      "Confirm that the note disappears from the list."
+    ],
     "success_text": "Notes"
   },
   "observations": [
-    { "name": "note_count", "url": "/notes", "instruction": "Count the note rows on the notes page and store the number as 'note_count'." }
+    {
+      "name": "note_count",
+      "url": "/notes",
+      "instruction": "Count the note rows on the notes page and store the number as 'note_count'."
+    },
+    {
+      "name": "shown_text",
+      "instruction": "Read the text of the note you just added in the notes list and store it exactly as shown as 'shown_text'."
+    }
   ],
-  "personas": ["refresh-after-delete"],
-  "budget": { "max_credits": 100, "estimated_credits_per_run": 15, "max_steps": 30, "timeout_seconds": 120 },
-  "kane": { "bin": "kane-cli", "headless": false }
+  "personas": [
+    "auto"
+  ],
+  "budget": {
+    "max_credits": 100,
+    "estimated_credits_per_run": 15,
+    "max_steps": 30,
+    "timeout_seconds": 120
+  },
+  "kane": {
+    "bin": "kane-cli",
+    "headless": false
+  },
+  "capabilities": [
+    "creates-record",
+    "submit-form",
+    "echoes-user-text",
+    "deletes-record"
+  ]
 }

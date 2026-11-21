@@ -1,13 +1,17 @@
 {
   "id": "impatient",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "Impatient customer",
-  "behaviour": "You are an impatient customer. Click the Pay button once, then click it again within one second because nothing seems to happen after the first click.",
+  "behaviour": "You are an impatient customer. On the checkout page, DOUBLE-CLICK the Pay button: perform one double-click action (two clicks in the same instant), not two separate clicks. You think the first click did not register.",
   "severity": "P1",
   "invariant": {
     "observation": "final_heading",
     "equals": "Order confirmed",
     "reason": "A customer who has paid must end on the order confirmation page, not an empty cart."
   },
-  "notes": "The second click happens while the first request is still in flight (the shop's payment step takes a moment). Do not wait for the confirmation page before clicking again."
+  "notes": "A normal click waits for the page to navigate, so a second separate click is impossible. Use a single double-click action on Pay. Then record the observations.",
+  "requires": [
+    "submit-form",
+    "creates-record"
+  ]
 }

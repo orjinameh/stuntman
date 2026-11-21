@@ -9,7 +9,7 @@
    rm stuntman-built.zip
    cd stuntman
    ```
-3. Run the tests: `npm test` (40 tests, no network, no dependencies to install).
+3. Run the tests: `npm test` (50 tests, no network, no dependencies to install).
 4. Run the fixture demo:
    ```bash
    node bin/stuntman.mjs audit --fixture-state broken    # exit 1 is expected

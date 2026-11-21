@@ -4,6 +4,14 @@
   "name": "Back-button customer",
   "behaviour": "You are a customer who second-guesses. Pay normally and wait for the confirmation page. Then press the browser Back button until you reach the checkout form again and submit it a second time.",
   "severity": "P0",
-  "invariant": { "observation": "order_count", "equals": 1, "reason": "Re-submitting a completed checkout must not create another order." },
-  "notes": "If the checkout form cannot be submitted again, that is acceptable: finish and record the observations."
+  "invariant": {
+    "observation": "order_count",
+    "equals": 1,
+    "reason": "Re-submitting a completed checkout must not create another order."
+  },
+  "notes": "If the checkout form cannot be submitted again, that is acceptable: finish and record the observations.",
+  "requires": [
+    "submit-form",
+    "creates-record"
+  ]
 }

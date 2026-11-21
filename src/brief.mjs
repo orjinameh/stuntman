@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { StuntmanError, writeJson, safeJoin } from './util.mjs';
 import { observedText } from './report.mjs';
+import { expectedShort } from './invariant.mjs';
 
 export function reproCommand(report, persona) {
   return report.mode === 'live'
@@ -26,7 +27,7 @@ export function buildBrief(report, lane, project) {
   const first = lane.runs[0];
   const evidence = lane.runs.map((r) => ({ run: r.index, exit_code: r.exit_code, status: r.status, values: r.values, raw: r.raw_path, session_dir: r.session_dir }));
   const acceptance = [
-    `${inv.observation} equals ${inv.equals} after the "${lane.id}" behaviour (${observedText(lane)} was observed before the fix).`,
+    `${inv.observation} equals ${expectedShort(inv)} after the "${lane.id}" behaviour (${observedText(lane)} was observed before the fix).`,
     'The normal single-click journey still completes and shows the success page.',
     'The repro command above reports this persona as clean on two consecutive runs.',
     'The locked test (tests/stuntman-' + lane.id + '_test.md) passes.',
@@ -40,7 +41,7 @@ export function buildBrief(report, lane, project) {
   return {
     schema: 'stuntman.brief/1', finding_id: lane.finding_id, persona: lane.id, severity: lane.severity,
     title: `${lane.name}: ${inv.reason}`,
-    behaviour, invariant: { observation: inv.observation, equals: inv.equals, reason: inv.reason },
+    behaviour, invariant: { observation: inv.observation, equals: inv.equals, equals_observation: inv.equals_observation, at_most_observation: inv.at_most_observation, reason: inv.reason },
     observed: { text: observedText(lane), values: first.values, basis: lane.basis },
     evidence, reproduce: reproCommand(report, lane.id), acceptance, suspects, do_not: doNot,
   };
@@ -55,10 +56,10 @@ You are a coding agent. A real-browser audit proved a hazard in this application
 ${b.behaviour}
 
 ## Invariant that must hold
-\`${b.invariant.observation} = ${b.invariant.equals}\` — ${b.invariant.reason}
+\`${b.invariant.observation} = ${b.invariant.at_most_observation ? '<= ' + b.invariant.at_most_observation : (b.invariant.equals_observation || b.invariant.equals)}\` — ${b.invariant.reason}
 
 ## Expected vs observed
-- Expected: \`${b.invariant.observation} = ${b.invariant.equals}\`
+- Expected: \`${b.invariant.observation} = ${b.invariant.at_most_observation ? '<= ' + b.invariant.at_most_observation : (b.invariant.equals_observation || b.invariant.equals)}\`
 - Observed: **${b.observed.text}** (${b.observed.basis})
 - Severity: ${b.severity}
 

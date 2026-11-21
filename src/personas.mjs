@@ -36,8 +36,13 @@ export function validatePersona(p, where = 'persona') {
   }
   if (!PERSONA_ID.test(p.id)) throw new StuntmanError(`${where}: persona id must match ^[a-z0-9-]+$ (got '${p.id}')`);
   const inv = p.invariant;
-  if (!inv || !inv.observation || inv.equals === undefined || !inv.reason) {
-    throw new StuntmanError(`${where}: invariant needs observation, equals and reason`);
+  if (!inv || !inv.observation || (inv.equals === undefined && !inv.equals_observation && !inv.at_most_observation) || !inv.reason) {
+    throw new StuntmanError(`${where}: invariant needs observation, reason and one of equals, equals_observation or at_most_observation`);
+  }
+  if (p.requires !== undefined && !Array.isArray(p.requires)) throw new StuntmanError(`${where}: requires must be an array of capability names`);
+  const ref = inv.equals_observation || inv.at_most_observation;
+  if (ref && !(p.captures || []).includes(ref) && !p.behaviour.includes(`'${ref}'`)) {
+    throw new StuntmanError(`persona '${p.id}': comparison value '${ref}' must be captured by the persona (list it in captures and store it as '${ref}' in the behaviour)`);
   }
 }
 

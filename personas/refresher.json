@@ -9,5 +9,9 @@
     "equals": "Order confirmed",
     "reason": "Reloading while the payment is in flight must still end on the order confirmation page."
   },
-  "notes": "Reload immediately after clicking Pay, before the confirmation page has rendered. Confirm the resubmit prompt if one appears."
+  "notes": "Reload immediately after clicking Pay, before the confirmation page has rendered. Confirm the resubmit prompt if one appears.",
+  "requires": [
+    "submit-form",
+    "creates-record"
+  ]
 }

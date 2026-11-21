@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { escapeHtml as h, c, writeJson, readJson, StuntmanError } from './util.mjs';
+import { expectedShort } from './invariant.mjs';
 
 const VERDICT_LABEL = { confirmed: 'CONFIRMED', suspected: 'suspected', clean: 'clean', inconclusive: 'inconclusive', skipped: 'skipped' };
 
@@ -14,6 +15,8 @@ export function observedText(lane) {
   if (inv.observation === 'order_count' && tally) return tally;
   const val = v[inv.observation];
   if (val === undefined || val === null) return '—';
+  const ref = inv.equals_observation || inv.at_most_observation;
+  if (ref) return `${inv.observation} = ${val}, ${ref} = ${v[ref] ?? '—'}`;
   const shown = typeof inv.equals === 'number' ? `${inv.observation} = ${val}` : `${inv.observation} = "${val}"`;
   return tally ? `${shown} (${tally})` : shown;
 }
@@ -29,7 +32,7 @@ function colorVerdict(v, s) {
 export function renderTable(report) {
   const rows = report.personas.map((l) => {
     const dur = l.runs.reduce((a, r) => a + (r.duration || 0), 0);
-    const cr = l.runs.reduce((a, r) => a + (r.credits || 0), 0);
+    const cr = Math.round(l.runs.reduce((a, r) => a + (r.credits || 0), 0) * 10) / 10;
     const verdict = VERDICT_LABEL[l.verdict];
     const detail = l.verdict === 'confirmed' ? `— ${observedText(l)}` : l.verdict === 'suspected' ? `— ${l.basis}` : '';
     return { cells: [l.id, l.severity, verdict, observedText(l), `${l.runs.length}`, dur ? `${dur.toFixed(1)}s` : '—', `${cr}`, l.finding_id || '—'], l, detail };
@@ -59,9 +62,18 @@ export function terminalSummary(report) {
   for (const l of report.personas.filter((x) => x.verdict === 'confirmed')) {
     lines.push(c.red(`${l.id} CONFIRMED — ${observedText(l)}`) + c.dim(`  (${l.finding_id}: ${l.basis})`));
   }
+  for (const l of report.personas.filter((x) => x.verdict === 'inconclusive')) {
+    lines.push(c.yellow(`${l.id} inconclusive — ${l.basis}`) + c.dim(`  (see ${l.runs[0] && l.runs[0].raw_path ? l.runs[0].raw_path.replace('.ndjson', '.stderr.txt') : 'raw/'})`));
+  }
+  for (const l of report.personas.filter((x) => x.verdict === 'inconclusive')) {
+    const r = l.runs[0] || {};
+    lines.push(c.yellow(`${l.id} inconclusive — ${l.basis}`));
+    if (r.stderr_tail) lines.push(c.dim(r.stderr_tail.split('\n').map((x) => '    kane: ' + x).join('\n')));
+  }
   for (const l of report.personas.filter((x) => x.verdict === 'suspected')) {
     lines.push(c.yellow(`${l.id} suspected — ${l.basis}. One failure is not a finding.`));
   }
+  if (report.not_applicable && report.not_applicable.length) lines.push(c.dim(`not applicable to this journey: ${report.not_applicable.map((n) => `${n.id} (${n.reason})`).join('; ')}`));
   lines.push(`${s.confirmed} confirmed · ${s.suspected} suspected · ${s.clean} clean · ${s.inconclusive} inconclusive · ${s.skipped} skipped · ${s.credits} credits`);
   if (report.budget_ceiling_hit) lines.push(c.yellow('budget ceiling reached: remaining personas were skipped (budget)'));
   if (s.confirmed) {
@@ -109,7 +121,7 @@ export function renderHtml(report) {
     const refs = l.runs.map((x) => `<li>run ${x.index}: exit ${x.exit_code} (${h(x.status)}) · values ${h(JSON.stringify(x.values))} · <code>${h(x.raw_path || '')}</code> · session <code>${h(x.session_dir || '—')}</code></li>`).join('');
     const pack = report.evidence && report.evidence.pack ? `<li>sealed pack: <code>${h(report.evidence.pack)}</code></li>` : '';
     return `<section class="finding"><h3>${h(l.finding_id)} · ${h(l.name)} — CONFIRMED</h3>
-<div class="cols"><div><p class="note">Expected</p><p><b>${h(l.invariant.observation)} = ${h(l.invariant.equals)}</b><br>${h(l.invariant.reason)}</p></div>
+<div class="cols"><div><p class="note">Expected</p><p><b>${h(l.invariant.observation)} = ${h(expectedShort(l.invariant))}</b><br>${h(l.invariant.reason)}</p></div>
 <div><p class="note">Observed</p><p class="v-confirmed"><b>${h(observedText(l))}</b><br>${h(l.basis)}</p></div></div>
 <p><b>Evidence</b></p><ul>${refs}${pack}</ul>${evid}
 <p><b>Reproduce</b></p><pre>node bin/stuntman.mjs audit ${report.mode === 'live' ? '--live' : '--fixture-state ' + h(report.fixture_state || 'broken')} --persona ${h(l.id)}</pre>
@@ -124,6 +136,7 @@ ${report.mode === 'fixture' ? '<p class="note">FIXTURE: these results replay han
 <div class="cards"><div class="stat"><b class="v-confirmed">${s.confirmed}</b>confirmed</div><div class="stat"><b class="v-suspected">${s.suspected}</b>suspected</div><div class="stat"><b class="v-clean">${s.clean}</b>clean</div><div class="stat"><b>${s.inconclusive}</b>inconclusive</div><div class="stat"><b>${s.credits}</b>credits</div></div>
 <h2>Cast</h2><table><thead><tr><th>Persona</th><th>Sev</th><th>Verdict</th><th>Observed</th><th>Runs</th><th>Time</th><th>Credits</th><th>Finding</th></tr></thead><tbody>${rows}</tbody></table>
 ${findings ? `<h2>Findings</h2>${findings}` : '<h2>Findings</h2><p>No hazard was confirmed.</p>'}
+${report.not_applicable && report.not_applicable.length ? `<h2>Not applicable</h2><ul>${report.not_applicable.map((n) => `<li><b>${h(n.id)}</b>: ${h(n.reason)}</li>`).join('')}</ul>` : ''}
 <h2>How to read this</h2>
 <p>Every persona performs one human behaviour against the same journey. A hazard is <b>confirmed</b> only when the persona fails twice with the same typed value for the invariant. A single failure is <b>suspected</b> and never produces a repair brief. A setup error, a timeout, or a missing observation is <b>inconclusive</b> and never confirms anything.</p>
 <p class="note">Generated by Stuntman. This file makes no external requests.</p></main></body></html>`;
