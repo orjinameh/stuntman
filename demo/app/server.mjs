@@ -1,127 +1,146 @@
-// Corner Store: the demo app under test. Zero dependencies, in-memory state.
-// Built from demo/BRIEF.md. Run: node demo/app/server.mjs  (PORT defaults to 3000)
 import http from 'node:http';
-import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 
 const PRODUCTS = [
-  { id: 'mug', name: 'Harbor Mug', price: 4900 },
-  { id: 'notebook', name: 'Field Notebook', price: 1200 },
-  { id: 'tote', name: 'Canvas Tote', price: 2800 },
+  { id: 'mug', name: 'Harbor Mug', cents: 4900 },
+  { id: 'notebook', name: 'Field Notebook', cents: 1200 },
+  { id: 'tote', name: 'Canvas Tote', cents: 2800 },
 ];
-const PAYMENT_LATENCY_MS = Number(process.env.PAYMENT_LATENCY_MS ?? 400);
 
-function seed() { return { carts: new Map(), orders: [], charges: [], nextOrder: 1, nonces: new Map() }; }
-let state = seed();
+let state;
+function seed() {
+  state = { products: PRODUCTS.map(p => ({ ...p })), carts: {}, orders: [], charges: [], nextOrderId: 1 };
+}
+seed();
 
-const money = (cents) => `$${(cents / 100).toFixed(2)}`;
-const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const money = c => '$' + (c / 100).toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const CSS = `
+body{margin:0;background:#faf6ee;color:#222;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:16px 24px;display:flex;gap:20px;align-items:baseline}
+header a{color:#1f4d36;text-decoration:none}header .brand{font-weight:700;font-size:20px}
+main{max-width:760px;margin:0 auto;padding:8px 24px 48px}
+.card{background:#fff;border-radius:10px;padding:18px 20px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+button{background:#1f4d36;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;cursor:pointer}
+input{width:100%;box-sizing:border-box;padding:10px;margin:4px 0 14px;border:1px solid #d6d0c2;border-radius:8px;font:inherit}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid #eee}
+`;
 
 function page(title, body) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} · Corner Store</title>
-<style>body{font:16px/1.5 system-ui,sans-serif;margin:0;background:#faf8f4;color:#222}header{padding:16px 24px;background:#fff;border-bottom:1px solid #e6e1d8;display:flex;gap:20px;align-items:center}
-header a{color:#222;text-decoration:none}header .brand{font-weight:700}main{max-width:760px;margin:24px auto;padding:0 20px}.card{background:#fff;border:1px solid #e6e1d8;border-radius:10px;padding:14px 18px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
-button{background:#1f4d4a;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:15px;cursor:pointer}input{padding:8px;border:1px solid #cfc9bd;border-radius:6px;width:100%;margin:4px 0 12px;font-size:15px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #e6e1d8;text-align:left}</style></head>
-<body><header><a class="brand" href="/">Corner Store</a><a href="/cart">Cart</a><a href="/orders">Orders</a></header><main>${body}</main></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${CSS}</style></head><body><header><a class="brand" href="/">Corner Store</a><a href="/cart">Cart</a><a href="/orders">Orders</a></header><main>${body}</main></body></html>`;
 }
 
-function parseCookies(req) {
-  const out = {};
-  for (const part of String(req.headers.cookie || '').split(';')) { const i = part.indexOf('='); if (i > 0) out[part.slice(0, i).trim()] = part.slice(i + 1).trim(); }
-  return out;
+function getSid(req, res) {
+  const m = /(?:^|;\s*)sid=([\w-]+)/.exec(req.headers.cookie || '');
+  let sid = m && m[1];
+  if (!sid) {
+    sid = randomUUID();
+    res.setHeader('Set-Cookie', `sid=${sid}; Path=/; HttpOnly; SameSite=Lax`);
+  }
+  return sid;
 }
 
-function session(req, res) {
-  let sid = parseCookies(req).sid;
-  if (!sid || !/^[a-f0-9]{16}$/.test(sid)) { sid = crypto.randomBytes(8).toString('hex'); res.setHeader('Set-Cookie', `sid=${sid}; Path=/; HttpOnly; SameSite=Lax`); }
-  if (!state.carts.has(sid)) state.carts.set(sid, []);
-  return state.carts.get(sid);
+const cartLines = cart => Object.entries(cart || {}).map(([id, qty]) => {
+  const p = state.products.find(x => x.id === id);
+  return { id, name: p.name, cents: p.cents, qty, line: p.cents * qty };
+});
+const sum = lines => lines.reduce((a, l) => a + l.line, 0);
+
+function readBody(req) {
+  return new Promise(resolve => {
+    let d = '';
+    req.on('data', c => (d += c));
+    req.on('end', () => resolve(new URLSearchParams(d)));
+  });
 }
 
-async function readForm(req) {
-  const chunks = [];
-  for await (const ch of req) chunks.push(ch);
-  return Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString('utf8')));
-}
+const send = (res, code, type, body) => { res.writeHead(code, { 'Content-Type': type }); res.end(body); };
+const html = (res, body, code = 200) => send(res, code, 'text/html; charset=utf-8', body);
+const redirect = (res, to) => { res.writeHead(303, { Location: to }); res.end(); };
 
-const cartTotal = (items) => items.reduce((a, it) => a + it.price * it.qty, 0);
-function send(res, status, body, type = 'text/html; charset=utf-8', headers = {}) { res.writeHead(status, { 'Content-Type': type, ...headers }); res.end(body); }
-const redirect = (res, to) => send(res, 303, '', 'text/plain', { Location: to });
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://x');
+  const path = url.pathname.replace(/\/+$/, '') || '/';
+  const m = req.method;
+  try {
+    if (m === 'GET' && path === '/health') return send(res, 200, 'application/json', '{"ok":true}');
+    if (m === 'GET' && path === '/__state') return send(res, 200, 'application/json', JSON.stringify(state));
+    if (m === 'POST' && path === '/admin/reset') { seed(); return send(res, 200, 'application/json', '{"ok":true}'); }
 
-async function handle(req, res) {
-  const url = new URL(req.url, 'http://localhost');
-  const p = url.pathname;
-  const cart = session(req, res);
-
-  if (req.method === 'GET' && p === '/health') return send(res, 200, JSON.stringify({ ok: true }), 'application/json');
-  if (req.method === 'GET' && p === '/__state') {
-    return send(res, 200, JSON.stringify({ products: PRODUCTS, cart, carts: state.carts.size, orders: state.orders, charges: state.charges }), 'application/json');
-  }
-  if (req.method === 'POST' && p === '/admin/reset') { state = seed(); return send(res, 200, JSON.stringify({ ok: true }), 'application/json'); }
-
-  if (req.method === 'GET' && p === '/') {
-    const items = PRODUCTS.map((pr) => `<div class="card"><div><b>${esc(pr.name)}</b><br>${money(pr.price)}</div><form method="post" action="/cart/add"><input type="hidden" name="product_id" value="${pr.id}"><button type="submit">Add ${esc(pr.name)} to cart</button></form></div>`).join('');
-    return send(res, 200, page('Shop', `<h1>Shop</h1>${items}`));
-  }
-  if (req.method === 'POST' && p === '/cart/add') {
-    const f = await readForm(req); const pr = PRODUCTS.find((x) => x.id === f.product_id);
-    if (!pr) return send(res, 400, page('Error', '<p>Unknown product.</p>'));
-    const line = cart.find((l) => l.id === pr.id);
-    if (line) line.qty += 1; else cart.push({ id: pr.id, name: pr.name, price: pr.price, qty: 1 });
-    return redirect(res, '/cart');
-  }
-  if (req.method === 'GET' && p === '/cart') {
-    if (!cart.length) return send(res, 200, page('Cart', '<h1>Cart</h1><p>Your cart is empty.</p><p><a href="/">Continue shopping</a></p>'));
-    const rows = cart.map((l) => `<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${money(l.price * l.qty)}</td></tr>`).join('');
-    return send(res, 200, page('Cart', `<h1>Cart</h1><table><tr><th>Item</th><th>Qty</th><th>Price</th></tr>${rows}</table><p><b>Total: ${money(cartTotal(cart))}</b></p><p><a href="/checkout"><button type="button">Continue to checkout</button></a></p>`));
-  }
-  if (req.method === 'GET' && p === '/checkout') {
-    if (!cart.length) return redirect(res, '/cart');
-    const nonce = crypto.randomBytes(12).toString('hex');
-    return send(res, 200, page('Checkout', `<h1>Checkout</h1><p>Total: <b>${money(cartTotal(cart))}</b></p>
-<form method="post" action="/api/orders"><input type="hidden" name="nonce" value="${nonce}"><label>Email<input name="email" type="email" required></label><label>Card number<input name="card" required placeholder="4242 4242 4242 4242"></label><button type="submit" id="pay">Pay ${money(cartTotal(cart))}</button></form>`));
-  }
-  if (req.method === 'POST' && p === '/api/orders') {
-    const f = await readForm(req);
-    if (!f.email || !f.card) return send(res, 400, page('Error', '<p>Email and card are required.</p>'));
-    if (f.nonce && state.nonces.has(f.nonce)) { // single-use checkout nonce: a repeat submit joins the first order
-      const existing = await state.nonces.get(f.nonce);
-      return redirect(res, `/orders/${existing}`);
+    if (m === 'GET' && path === '/') {
+      const cards = state.products.map(p => `<div class="card row"><div><strong>${esc(p.name)}</strong><br>${money(p.cents)}</div>
+<form method="post" action="/cart/add"><input type="hidden" name="id" value="${p.id}"><button>Add to cart</button></form></div>`).join('');
+      return html(res, page('Shop', `<h1>Shop</h1>${cards}`));
     }
-    if (!cart.length) return send(res, 400, page('Error', '<p>Your cart is empty, so there is nothing to pay for.</p><p><a href="/">Back to the shop</a></p>'));
-    const items = cart.map((l) => ({ ...l }));
-    const total = cartTotal(cart);
-    const place = (async () => {
-      await sleep(PAYMENT_LATENCY_MS); // the (fake) payment provider takes a moment
-      const id = state.nextOrder++;
-      state.charges.push({ order: id, amount: total, card_last4: String(f.card).replace(/\D/g, '').slice(-4), at: new Date().toISOString() });
-      state.orders.push({ id, email: f.email, items, total, at: new Date().toISOString() });
-      cart.length = 0;
-      return id;
-    })();
-    if (f.nonce) state.nonces.set(f.nonce, place);
-    return redirect(res, `/orders/${await place}`);
-  }
-  if (req.method === 'GET' && p === '/orders') {
-    const rows = state.orders.map((o) => { const ch = state.charges.find((c) => c.order === o.id); return `<tr class="order-row"><td><a href="/orders/${o.id}">#${o.id}</a></td><td>${money(o.total)}</td><td>${esc(o.at)}</td><td>Charge: ${money(ch ? ch.amount : 0)}</td></tr>`; }).join('');
-    return send(res, 200, page('Orders', `<h1>Orders</h1>${state.orders.length ? `<table><tr><th>Order</th><th>Total</th><th>Placed</th><th>Charge</th></tr>${rows}</table>` : '<p>No orders yet.</p>'}`));
-  }
-  const m = p.match(/^\/orders\/(\d+)$/);
-  if (req.method === 'GET' && m) {
-    const o = state.orders.find((x) => x.id === Number(m[1]));
-    if (!o) return send(res, 404, page('Not found', '<p>No such order.</p>'));
-    return send(res, 200, page('Order', `<h1>Order confirmed</h1><p>Order #${o.id} for ${esc(o.email)}. Total ${money(o.total)}.</p><p><a href="/orders">All orders</a></p>`));
-  }
-  return send(res, 404, page('Not found', '<p>Not found.</p>'));
-}
 
-export function createServer() {
-  return http.createServer((req, res) => { handle(req, res).catch((e) => { if (!res.headersSent) send(res, 500, page('Error', `<p>${esc(e.message)}</p>`)); }); });
-}
-export function resetState() { state = seed(); }
+    if (m === 'POST' && path === '/cart/add') {
+      const sid = getSid(req, res);
+      const id = (await readBody(req)).get('id');
+      if (state.products.some(p => p.id === id)) {
+        const cart = (state.carts[sid] ||= {});
+        cart[id] = (cart[id] || 0) + 1;
+      }
+      return redirect(res, '/cart');
+    }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env.PORT || 3000);
-  createServer().listen(port, () => console.log(`Corner Store listening on http://localhost:${port}`));
-}
+    if (m === 'GET' && path === '/cart') {
+      const lines = cartLines(state.carts[getSid(req, res)]);
+      if (!lines.length) return html(res, page('Cart', `<h1>Cart</h1><div class="card">Your cart is empty.</div>`));
+      const rows = lines.map(l => `<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${money(l.cents)}</td><td>${money(l.line)}</td></tr>`).join('');
+      return html(res, page('Cart', `<h1>Cart</h1><div class="card"><table><tr><th>Item</th><th>Qty</th><th>Price</th><th>Line</th></tr>${rows}
+<tr><td colspan="3"><strong>Total</strong></td><td><strong>${money(sum(lines))}</strong></td></tr></table></div>
+<form method="get" action="/checkout"><button>Continue to checkout</button></form>`));
+    }
+
+    if (m === 'GET' && path === '/checkout') {
+      const lines = cartLines(state.carts[getSid(req, res)]);
+      if (!lines.length) return redirect(res, '/cart');
+      return html(res, page('Checkout', `<h1>Checkout</h1><form class="card" method="post" action="/checkout">
+<p>Total: <strong>${money(sum(lines))}</strong></p>
+<label>Email<input name="email" type="email" required></label>
+<label>Card number<input name="card" required placeholder="4242 4242 4242 4242"></label>
+<button>Pay</button></form>`));
+    }
+
+    if (m === 'POST' && path === '/checkout') {
+      const sid = getSid(req, res);
+      const form = await readBody(req);
+      const email = (form.get('email') || '').trim();
+      const card = (form.get('card') || '').trim();
+      const lines = cartLines(state.carts[sid]);
+      if (!lines.length) return redirect(res, '/cart');
+      if (!email || !card) return html(res, page('Checkout', `<h1>Checkout</h1><div class="card">Email and card number are required. <a href="/checkout">Back</a></div>`), 400);
+      // Take the lines and empty the cart before the provider call, so a repeated submit cannot charge twice.
+      delete state.carts[sid];
+      const total = sum(lines);
+      await sleep(1500); // fake payment provider
+      const id = state.nextOrderId++;
+      const at = new Date().toISOString();
+      state.charges.push({ id: 'ch_' + id, orderId: id, cents: total, at });
+      state.orders.push({ id, email, lines, totalCents: total, chargedCents: total, at });
+      return redirect(res, '/orders/' + id);
+    }
+
+    if (m === 'GET' && path === '/orders') {
+      const rows = state.orders.map(o => `<tr><td><a href="/orders/${o.id}">#${o.id}</a></td><td>${money(o.totalCents)}</td><td>${esc(o.at)}</td><td>${money(o.chargedCents)}</td></tr>`).join('');
+      return html(res, page('Orders', `<h1>Orders</h1><div class="card"><table><tr><th>Order</th><th>Total</th><th>Time</th><th>Charged</th></tr>${rows}</table></div>`));
+    }
+
+    const om = /^\/orders\/(\d+)$/.exec(path);
+    if (m === 'GET' && om) {
+      const o = state.orders.find(x => x.id === Number(om[1]));
+      if (!o) return html(res, page('Not found', '<h1>Order not found</h1>'), 404);
+      return html(res, page('Order confirmed', `<h1>Order confirmed</h1><div class="card">Order number: <strong>#${o.id}</strong><br>Total charged: ${money(o.chargedCents)}</div>`));
+    }
+
+    html(res, page('Not found', '<h1>Not found</h1>'), 404);
+  } catch (e) {
+    console.error(e);
+    send(res, 500, 'text/plain', 'Server error');
+  }
+});
+
+server.listen(Number(process.env.PORT) || 3000);
