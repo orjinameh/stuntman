@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+!.env.example
+runs/
+.testmuai/
+*.evidence
+.DS_Store
