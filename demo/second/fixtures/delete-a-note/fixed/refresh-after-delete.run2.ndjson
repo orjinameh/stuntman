@@ -1,0 +1,4 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Added Buy milk"}
+{"type": "step", "summary": "Deleted it and reloaded"}
+{"type": "run_end", "status": "passed", "summary": "Assertion passed: note_count was 1", "one_liner": "Assertion passed: note_count was 1", "reason": "Assertion passed: note_count was 1", "duration": 28.4, "credits": 12, "final_state": {"note_count": "1"}, "session_dir": "fixtures://delete-a-note/fixed/refresh-after-delete.run2"}

@@ -1,0 +1,9 @@
+{
+  "id": "slow-submit",
+  "version": "1.0.0",
+  "name": "Slow-connection customer",
+  "behaviour": "You are a customer on a slow connection. Click the Pay button, wait about two seconds without the page changing, then click Pay again because nothing seems to be happening.",
+  "severity": "P0",
+  "invariant": { "observation": "order_count", "equals": 1, "reason": "A retry while the first request is pending must not create a second order." },
+  "notes": "Use plain waiting, not network throttling. The retry happens before the confirmation page appears."
+}

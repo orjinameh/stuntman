@@ -1,0 +1,34 @@
+{
+  "schema": "stuntman.lock/1",
+  "journey_hash": "d754f090d8657ed9f694e6818772179ea849380aea28437a365fb20ce8875078",
+  "observations_hash": "5912ecf87f405330079bd400cbc3be4ccf900fe710d828f82552b2e89de091f3",
+  "personas_hash": "5a05d87b08bdf34782a0e981675417ff78651a0434e2fd72e80d6512f0539a41",
+  "contract_hash": "4db4060ea947525be1d251f6efd6011a132bc6ee2f4ecee5f2f61624393cb62b",
+  "audited_commit": "18806b2",
+  "created_at": "2026-11-21T01:00:04.420Z",
+  "personas": [
+    {
+      "id": "impatient",
+      "version": "1.0.0"
+    },
+    {
+      "id": "refresher",
+      "version": "1.0.0"
+    },
+    {
+      "id": "back-button",
+      "version": "1.0.0"
+    },
+    {
+      "id": "slow-submit",
+      "version": "1.0.0"
+    },
+    {
+      "id": "returning",
+      "version": "1.0.0"
+    }
+  ],
+  "tests": [
+    "tests/stuntman-impatient_test.md"
+  ]
+}

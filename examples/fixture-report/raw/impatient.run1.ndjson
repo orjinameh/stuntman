@@ -1,0 +1,7 @@
+{"type": "run_start", "objective": "[impatient] recorded fixture run 1"}
+{"type": "step", "summary": "Opened http://localhost:3000/"}
+{"type": "step", "summary": "Added Harbor Mug to cart"}
+{"type": "step", "summary": "Opened checkout"}
+{"type": "step", "summary": "Performed persona behaviour"}
+{"type": "step", "summary": "Opened /orders and recorded observations"}
+{"type": "run_end", "status": "failed", "summary": "Assertion failed: order_count was 2, expected 1", "one_liner": "Assertion failed: order_count was 2, expected 1", "reason": "Assertion failed: order_count was 2, expected 1", "duration": 41.2, "credits": 18, "final_state": {"order_count": "2", "charged_total": "$98.00"}, "context": "fixture", "session_dir": "fixtures://buy-a-mug/impatient.run1", "run_dir": null, "test_url": null}

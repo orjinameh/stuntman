@@ -1,0 +1,7 @@
+{"type": "run_start", "objective": "[returning] recorded fixture run 1"}
+{"type": "step", "summary": "Opened http://localhost:3000/"}
+{"type": "step", "summary": "Added Harbor Mug to cart"}
+{"type": "step", "summary": "Opened checkout"}
+{"type": "step", "summary": "Performed persona behaviour"}
+{"type": "step", "summary": "Opened /orders and recorded observations"}
+{"type": "run_end", "status": "passed", "summary": "Assertion passed: order_count was 2", "one_liner": "Assertion passed: order_count was 2", "reason": "Assertion passed: order_count was 2", "duration": 39.0, "credits": 17, "final_state": {"order_count": "2", "charged_total": "$98.00"}, "context": "fixture", "session_dir": "fixtures://buy-a-mug/returning.run1", "run_dir": null, "test_url": null}

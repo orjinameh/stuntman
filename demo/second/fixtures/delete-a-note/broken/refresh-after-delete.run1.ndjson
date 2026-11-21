@@ -1,0 +1,4 @@
+{"type": "run_start"}
+{"type": "step", "summary": "Added Buy milk"}
+{"type": "step", "summary": "Deleted it and reloaded"}
+{"type": "run_end", "status": "failed", "summary": "Assertion failed: note_count was 2, expected 1", "one_liner": "Assertion failed: note_count was 2, expected 1", "reason": "Assertion failed: note_count was 2, expected 1", "duration": 28.4, "credits": 12, "final_state": {"note_count": "2"}, "session_dir": "fixtures://delete-a-note/broken/refresh-after-delete.run1"}

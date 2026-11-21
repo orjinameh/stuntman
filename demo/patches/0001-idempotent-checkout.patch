@@ -1,0 +1,51 @@
+diff --git a/demo/app/server.mjs b/demo/app/server.mjs
+index 84bde1c..3aeb0f1 100644
+--- a/demo/app/server.mjs
++++ b/demo/app/server.mjs
+@@ -11,7 +11,7 @@ const PRODUCTS = [
+ ];
+ const PAYMENT_LATENCY_MS = Number(process.env.PAYMENT_LATENCY_MS ?? 400);
+ 
+-function seed() { return { carts: new Map(), orders: [], charges: [], nextOrder: 1 }; }
++function seed() { return { carts: new Map(), orders: [], charges: [], nextOrder: 1, nonces: new Map() }; }
+ let state = seed();
+ 
+ const money = (cents) => `$${(cents / 100).toFixed(2)}`;
+@@ -78,21 +78,30 @@ async function handle(req, res) {
+   }
+   if (req.method === 'GET' && p === '/checkout') {
+     if (!cart.length) return redirect(res, '/cart');
++    const nonce = crypto.randomBytes(12).toString('hex');
+     return send(res, 200, page('Checkout', `<h1>Checkout</h1><p>Total: <b>${money(cartTotal(cart))}</b></p>
+-<form method="post" action="/api/orders"><label>Email<input name="email" type="email" required></label><label>Card number<input name="card" required placeholder="4242 4242 4242 4242"></label><button type="submit" id="pay">Pay ${money(cartTotal(cart))}</button></form>`));
++<form method="post" action="/api/orders"><input type="hidden" name="nonce" value="${nonce}"><label>Email<input name="email" type="email" required></label><label>Card number<input name="card" required placeholder="4242 4242 4242 4242"></label><button type="submit" id="pay">Pay ${money(cartTotal(cart))}</button></form>`));
+   }
+   if (req.method === 'POST' && p === '/api/orders') {
+     const f = await readForm(req);
+     if (!f.email || !f.card) return send(res, 400, page('Error', '<p>Email and card are required.</p>'));
++    if (f.nonce && state.nonces.has(f.nonce)) { // single-use checkout nonce: a repeat submit joins the first order
++      const existing = await state.nonces.get(f.nonce);
++      return redirect(res, `/orders/${existing}`);
++    }
+     if (!cart.length) return send(res, 400, page('Error', '<p>Your cart is empty, so there is nothing to pay for.</p><p><a href="/">Back to the shop</a></p>'));
+     const items = cart.map((l) => ({ ...l }));
+     const total = cartTotal(cart);
+-    await sleep(PAYMENT_LATENCY_MS); // the (fake) payment provider takes a moment
+-    const id = state.nextOrder++;
+-    state.charges.push({ order: id, amount: total, card_last4: String(f.card).replace(/\D/g, '').slice(-4), at: new Date().toISOString() });
+-    state.orders.push({ id, email: f.email, items, total, at: new Date().toISOString() });
+-    cart.length = 0;
+-    return redirect(res, `/orders/${id}`);
++    const place = (async () => {
++      await sleep(PAYMENT_LATENCY_MS); // the (fake) payment provider takes a moment
++      const id = state.nextOrder++;
++      state.charges.push({ order: id, amount: total, card_last4: String(f.card).replace(/\D/g, '').slice(-4), at: new Date().toISOString() });
++      state.orders.push({ id, email: f.email, items, total, at: new Date().toISOString() });
++      cart.length = 0;
++      return id;
++    })();
++    if (f.nonce) state.nonces.set(f.nonce, place);
++    return redirect(res, `/orders/${await place}`);
+   }
+   if (req.method === 'GET' && p === '/orders') {
+     const rows = state.orders.map((o) => { const ch = state.charges.find((c) => c.order === o.id); return `<tr class="order-row"><td><a href="/orders/${o.id}">#${o.id}</a></td><td>${money(o.total)}</td><td>${esc(o.at)}</td><td>Charge: ${money(ch ? ch.amount : 0)}</td></tr>`; }).join('');

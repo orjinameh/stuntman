@@ -1,0 +1,43 @@
+name: ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Run the live Kane audit (needs LT_USERNAME / LT_ACCESS_KEY secrets)"
+        type: boolean
+        default: false
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm test
+      - name: Fixture audit (fixed state must be clean)
+        run: node bin/stuntman.mjs audit --fixture-state fixed
+      - name: Fixture audit (broken state must exit 1)
+        run: |
+          set +e
+          node bin/stuntman.mjs audit --fixture-state broken
+          test $? -eq 1
+  live:
+    if: github.event_name == 'workflow_dispatch' && inputs.live
+    runs-on: ubuntu-latest
+    env:
+      KANE_HEADLESS: "1"
+      LT_USERNAME: ${{ secrets.LT_USERNAME }}
+      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install -g @testmuai/kane-cli
+      - run: kane-cli login --username "$LT_USERNAME" --access-key "$LT_ACCESS_KEY"
+      - run: node demo/app/server.mjs &
+      - run: sleep 2 && node bin/stuntman.mjs audit --live
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: stuntman-runs, path: runs/ }

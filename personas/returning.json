@@ -1,0 +1,9 @@
+{
+  "id": "returning",
+  "version": "1.0.0",
+  "name": "Returning customer",
+  "behaviour": "You are a customer who comes back later. Complete the purchase, open the orders page, then go back to the store, add the same item again and complete a second checkout exactly once.",
+  "severity": "P2",
+  "invariant": { "observation": "order_count", "equals": 2, "reason": "Two deliberate purchases must create exactly two orders, no more and no fewer." },
+  "notes": "This persona is a control: two intended purchases are the expected outcome."
+}

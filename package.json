@@ -1,0 +1,16 @@
+{
+  "name": "stuntman",
+  "version": "0.1.0",
+  "description": "Your agent tested the happy path. Stuntman plays everyone else. Human-factor regression suite for agent-built web apps, powered by Kane CLI.",
+  "type": "module",
+  "bin": { "stuntman": "bin/stuntman.mjs" },
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "audit": "node bin/stuntman.mjs audit --fixture-state broken",
+    "demo": "node demo/app/server.mjs",
+    "check": "npm test && node bin/stuntman.mjs audit --fixture-state fixed"
+  },
+  "files": ["bin", "src", "personas", "fixtures", "demo", "stuntman.json"]
+}
