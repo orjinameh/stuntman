@@ -1,0 +1,88 @@
+{
+  "schema": "stuntman.brief/1",
+  "finding_id": "F-001",
+  "persona": "stale-total",
+  "severity": "P1",
+  "title": "Stale-total customer: A customer must never be charged more than the total they were shown when they paid.",
+  "behaviour": "You are a customer who changes your mind after seeing the total. Follow these steps exactly, in this order. Step 1: follow the journey only as far as the checkout form (add the mug, open the cart, continue to checkout, fill in the email and the card number) and stop; do NOT click Pay. Step 2: use the Corner Store header link to go back to the shop and add one more item of a different product to the cart; you will land on the cart page. Step 3: press the browser Back button exactly twice, one press at a time, checking the page after each press: the first press shows the shop page and the second press shows the checkout form. Do not press Back a third time. If you went too far and the checkout form is not shown, press the browser Forward button once and look again. If the form's fields are empty, enter the same email and card again. Step 4: read the Total shown on this checkout form and store its text as 'displayed_total'. Do not go on to step 5 until 'displayed_total' has been stored. Step 5: click Pay once. Step 6: if the shop refuses the payment or sends you to an updated total instead of completing the order, do not pay again.",
+  "invariant": {
+    "observation": "charged_total",
+    "at_most_observation": "displayed_total",
+    "reason": "A customer must never be charged more than the total they were shown when they paid."
+  },
+  "observed": {
+    "text": "charged_total = 61, displayed_total = $49.00",
+    "values": {
+      "displayed_total": "$49.00",
+      "final_heading": "Order confirmed",
+      "order_count": "1",
+      "charged_total": "61",
+      "checkout_form_fields_empty": "false",
+      "order_confirmed_visible": "true",
+      "payment_refused": "false",
+      "updated_total_instead_of_order_completion": "false",
+      "page_shows_no_orders_for_order_count": "true",
+      "page_shows_no_orders_for_charged_total": "true",
+      "charged_total_no_more_than_displayed_total": "61"
+    },
+    "basis": "2 of 2 runs failed with the same typed violation (charged_total was 61, more than displayed_total ($49.00))"
+  },
+  "evidence": [
+    {
+      "run": 1,
+      "exit_code": 1,
+      "status": "failed",
+      "values": {
+        "displayed_total": "$49.00",
+        "final_heading": "Order confirmed",
+        "order_count": "1",
+        "charged_total": "61",
+        "checkout_form_fields_empty": "false",
+        "order_confirmed_visible": "true",
+        "payment_refused": "false",
+        "updated_total_instead_of_order_completion": "false",
+        "page_shows_no_orders_for_order_count": "true",
+        "page_shows_no_orders_for_charged_total": "true",
+        "charged_total_no_more_than_displayed_total": "61"
+      },
+      "raw": "raw/stale-total.run1.ndjson",
+      "session_dir": "/home/codespace/.testmuai/kaneai/sessions/8adf20e3-fc73-43d8-814e-46ab1052632a"
+    },
+    {
+      "run": 2,
+      "exit_code": 1,
+      "status": "failed",
+      "values": {
+        "displayed_total": "$49.00",
+        "final_heading": "Order confirmed",
+        "order_count": "1",
+        "charged_total": "61.00",
+        "checkout_form_fields_empty": "false",
+        "order_confirmed_visible": "true",
+        "shop_refuses_payment": "false",
+        "shop_sends_updated_total": "false",
+        "page_orders_present_check": "true",
+        "page_orders_present_check_2": "true",
+        "charged_total_not_more_than_displayed_total_check": "61.00"
+      },
+      "raw": "raw/stale-total.run2.ndjson",
+      "session_dir": "/home/codespace/.testmuai/kaneai/sessions/b1cf7cd2-6d1a-48cf-9a61-8391d3c57f54"
+    }
+  ],
+  "reproduce": "node bin/stuntman.mjs audit --live --persona stale-total",
+  "acceptance": [
+    "charged_total equals <= displayed_total after the \"stale-total\" behaviour (charged_total = 61, displayed_total = $49.00 was observed before the fix).",
+    "The normal single-click journey still completes and shows the success page.",
+    "The repro command above reports this persona as clean on two consecutive runs.",
+    "The locked test (tests/stuntman-stale-total_test.md) passes."
+  ],
+  "suspects": [
+    "demo/app/server.mjs"
+  ],
+  "do_not": [
+    "Do not edit stuntman.json, any file in personas/, stuntman.lock, or tests/stuntman-*_test.md.",
+    "Do not relax the invariant, change the expected value, or remove the persona.",
+    "Do not special-case the audit (user agents, headers, timing) to make it pass.",
+    "Fix the application so that the human behaviour is handled, not the observation."
+  ]
+}

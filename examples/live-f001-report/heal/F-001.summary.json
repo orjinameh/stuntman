@@ -1,0 +1,106 @@
+[
+  {
+    "persona": "stale-total",
+    "index": 1,
+    "exit_code": 0,
+    "status": "passed",
+    "reason": "Objective completed",
+    "stderr_text": "\nUpdate available: 0.10.7 → 0.10.9 — run `npm install -g @testmuai/kane-cli@latest` to update\n\nSkill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nRunning on: Desktop · Chrome\nevidence: view locally with `kane-cli evidence serve /home/codespace/.testmuai/kaneai/sessions/9a04427d-3870-4490-9998-355272d665fd/evidence/48c82bd4-b069-43c3-9cd5-3364748520cb.evidence`\n",
+    "values": {
+      "url": "http://localhost:3000/orders",
+      "displayed_total": "$49.00",
+      "final_heading": "Checkout",
+      "order_count": "0",
+      "charged_total": "0.00",
+      "checkout_form_shown_check": "true",
+      "checkout_form_fields_empty_check": "false",
+      "updated_total_instead_of_order_check": "true",
+      "payment_refused_check": "false",
+      "order_rows_present_check": "false",
+      "order_count_2": "NONE",
+      "order_rows_present_for_charged_total_check": "false",
+      "charged_total_not_more_than_displayed_total_check": "0",
+      "charged_total_2": "NONE"
+    },
+    "duration": 257.9,
+    "credits": 86.9626145,
+    "reason_code": "success.complete",
+    "kane_verdict": null,
+    "session_dir": "/home/codespace/.testmuai/kaneai/sessions/9a04427d-3870-4490-9998-355272d665fd",
+    "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M883TYXPH000WK0Z9X0GNWCH/dashboard/share/US_5W8SUDYE5T6DBCFBCWS1QQZP9ROUVWCMX5HPQ2JICDSW8MNOV33SXZW9U306PMRW?type=summary&agentView=true&fqdn=summary-page",
+    "has_run_end": true,
+    "mode": "live",
+    "raw_path": null,
+    "kane_values": {
+      "url": "http://localhost:3000/orders",
+      "displayed_total": "$49.00",
+      "final_heading": "Checkout",
+      "order_count": "0",
+      "charged_total": "0",
+      "checkout_form_shown_check": "true",
+      "checkout_form_fields_empty_check": "false",
+      "updated_total_instead_of_order_check": "true",
+      "payment_refused_check": "false",
+      "order_rows_present_check": "false",
+      "order_count_2": "NONE",
+      "order_rows_present_for_charged_total_check": "false",
+      "charged_total_not_more_than_displayed_total_check": "0",
+      "charged_total_2": "NONE"
+    },
+    "probe": {
+      "order_count": "0",
+      "charged_total": "0.00"
+    },
+    "probe_error": null,
+    "probe_conflicts": [
+      "charged_total"
+    ]
+  },
+  {
+    "persona": "stale-total",
+    "index": 2,
+    "exit_code": 1,
+    "status": "failed",
+    "reason": "Checkpoint assertion failed: \"The journey is successful when the page shows \"Order confirmed\".\"",
+    "stderr_text": "\nUpdate available: 0.10.7 → 0.10.9 — run `npm install -g @testmuai/kane-cli@latest` to update\n\nSkill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nRunning on: Desktop · Chrome\nevidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)\nevidence: view locally with `kane-cli evidence serve /home/codespace/.testmuai/kaneai/sessions/6bec8ad7-12b4-4de8-9402-82319c8852b8/evidence/596dbf3c-f09d-475a-af7e-5a82a53ba6a6.evidence`\n",
+    "values": {
+      "displayed_total": "$61.00",
+      "final_heading": "Checkout",
+      "checkout_form_shown": "true",
+      "form_fields_empty": "false",
+      "order_confirmed_shown": "false",
+      "payment_refused": "false",
+      "updated_total_sent": "false",
+      "order_count": "0",
+      "charged_total": "0.00"
+    },
+    "duration": 141.6,
+    "credits": 46.7657885,
+    "reason_code": "assertion_error.confirmed_product_bug",
+    "kane_verdict": {
+      "status": "failed",
+      "family": "application_issue",
+      "root_cause": "The checkout form kept the old one-item total after the cart was changed and the customer returned with the browser Back button. When payment was submitted, the shop recognized the newer cart total and sent the customer back to checkout instead of completing the order."
+    },
+    "session_dir": "/home/codespace/.testmuai/kaneai/sessions/6bec8ad7-12b4-4de8-9402-82319c8852b8",
+    "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M8843A773X1Q19KGB3GTFM5A/dashboard/share/US_ZCZR93HKW0GL4NWAFZRWVCMLVK6S984EMC7A1KACRDTYLJ1WCZVRSNNHHR8PROLC?type=summary&agentView=true&fqdn=summary-page",
+    "has_run_end": true,
+    "mode": "live",
+    "raw_path": null,
+    "kane_values": {
+      "displayed_total": "$61.00",
+      "final_heading": "Checkout",
+      "checkout_form_shown": "true",
+      "form_fields_empty": "false",
+      "order_confirmed_shown": "false",
+      "payment_refused": "false",
+      "updated_total_sent": "false"
+    },
+    "probe": {
+      "order_count": "0",
+      "charged_total": "0.00"
+    },
+    "probe_error": null,
+    "probe_conflicts": []
+  }
+]

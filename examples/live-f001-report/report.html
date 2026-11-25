@@ -1,0 +1,32 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stuntman report · Corner Store</title><style>:root{--bg:#f6f4ef;--fg:#1b1b1f;--mut:#6b6b73;--card:#fff;--line:#e3e0d8;--red:#b3261e;--amber:#9a6700;--green:#1a7f37;--blue:#1f4fb8}
+@media (prefers-color-scheme:dark){:root{--bg:#141417;--fg:#ececf0;--mut:#9a9aa4;--card:#1d1d22;--line:#2c2c33;--red:#ff6b61;--amber:#e3b341;--green:#56d364;--blue:#79a6ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:28px 18px 60px}h1{margin:0 0 4px;font-size:26px}h2{margin:30px 0 10px;font-size:18px}
+.sub{color:var(--mut)}.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.06em;border:1px solid currentColor}
+.live{color:var(--blue)}.fixture{color:var(--amber)}
+.cards{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:110px}
+.stat b{display:block;font-size:22px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mut);font-weight:600}
+.v-confirmed{color:var(--red);font-weight:700}.v-suspected{color:var(--amber);font-weight:600}.v-clean{color:var(--green)}.v-inconclusive,.v-skipped{color:var(--mut)}
+.finding{background:var(--card);border:1px solid var(--red);border-radius:12px;padding:16px 18px;margin:14px 0}
+.finding h3{margin:0 0 6px;color:var(--red)}pre,code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace}pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:640px){.cols{grid-template-columns:1fr}}
+img.shot{max-width:100%;border:1px solid var(--line);border-radius:8px}.note{color:var(--mut);font-size:13px}</style></head><body><main>
+<h1>Stuntman <span class="badge live">LIVE</span></h1>
+<p class="sub">Corner Store · Buy a mug as a guest · commit <code>7f6f7d1</code> · 2026-11-21T16:26:06.330Z · contract <code>9cdef2dc58bd</code></p>
+
+<div class="cards"><div class="stat"><b class="v-confirmed">1</b>confirmed</div><div class="stat"><b class="v-suspected">0</b>suspected</div><div class="stat"><b class="v-clean">0</b>clean</div><div class="stat"><b>0</b>inconclusive</div><div class="stat"><b>122.8</b>credits</div></div>
+<h2>Cast</h2><table><thead><tr><th>Persona</th><th>Sev</th><th>Verdict</th><th>Observed</th><th>Runs</th><th>Time</th><th>Credits</th><th>Finding</th></tr></thead><tbody><tr><td>Stale-total customer <span class="note">(stale-total)</span></td><td>P1</td><td class="v-confirmed">CONFIRMED</td><td>charged_total = 61, displayed_total = $49.00</td><td>2</td><td>368.7s</td><td>122.80658499999998</td><td>F-001</td></tr></tbody></table>
+<h2>Findings</h2><section class="finding"><h3>F-001 · Stale-total customer — CONFIRMED</h3>
+<div class="cols"><div><p class="note">Expected</p><p><b>charged_total = &lt;= displayed_total</b><br>A customer must never be charged more than the total they were shown when they paid.</p></div>
+<div><p class="note">Observed</p><p class="v-confirmed"><b>charged_total = 61, displayed_total = $49.00</b><br>2 of 2 runs failed with the same typed violation (charged_total was 61, more than displayed_total ($49.00))</p></div></div>
+<p><b>Evidence</b></p><ul><li>run 1: exit 1 (failed) · values {&quot;displayed_total&quot;:&quot;$49.00&quot;,&quot;final_heading&quot;:&quot;Order confirmed&quot;,&quot;order_count&quot;:&quot;1&quot;,&quot;charged_total&quot;:&quot;61&quot;,&quot;checkout_form_fields_empty&quot;:&quot;false&quot;,&quot;order_confirmed_visible&quot;:&quot;true&quot;,&quot;payment_refused&quot;:&quot;false&quot;,&quot;updated_total_instead_of_order_completion&quot;:&quot;false&quot;,&quot;page_shows_no_orders_for_order_count&quot;:&quot;true&quot;,&quot;page_shows_no_orders_for_charged_total&quot;:&quot;true&quot;,&quot;charged_total_no_more_than_displayed_total&quot;:&quot;61&quot;} · <code>raw/stale-total.run1.ndjson</code> · session <code>/home/codespace/.testmuai/kaneai/sessions/8adf20e3-fc73-43d8-814e-46ab1052632a</code></li><li>run 2: exit 1 (failed) · values {&quot;displayed_total&quot;:&quot;$49.00&quot;,&quot;final_heading&quot;:&quot;Order confirmed&quot;,&quot;order_count&quot;:&quot;1&quot;,&quot;charged_total&quot;:&quot;61.00&quot;,&quot;checkout_form_fields_empty&quot;:&quot;false&quot;,&quot;order_confirmed_visible&quot;:&quot;true&quot;,&quot;shop_refuses_payment&quot;:&quot;false&quot;,&quot;shop_sends_updated_total&quot;:&quot;false&quot;,&quot;page_orders_present_check&quot;:&quot;true&quot;,&quot;page_orders_present_check_2&quot;:&quot;true&quot;,&quot;charged_total_not_more_than_displayed_total_check&quot;:&quot;61.00&quot;} · <code>raw/stale-total.run2.ndjson</code> · session <code>/home/codespace/.testmuai/kaneai/sessions/b1cf7cd2-6d1a-48cf-9a61-8391d3c57f54</code></li><li>sealed pack: <code>/home/codespace/.testmuai/kaneai/sessions/8adf20e3-fc73-43d8-814e-46ab1052632a/evidence/abde93e2-b388-4c9d-896c-270c9c3c80c9.evidence</code></li></ul><p class="note">pack has no step screenshot</p>
+<p><b>Reproduce</b></p><pre>node bin/stuntman.mjs audit --live --persona stale-total</pre>
+<p><b>Next</b></p><pre>node bin/stuntman.mjs brief F-001
+node bin/stuntman.mjs lock
+node bin/stuntman.mjs heal F-001 --agent-cmd '&lt;your agent&gt; {brief}'</pre></section>
+<h2>Not applicable</h2><ul><li><b>chaotic-input</b>: needs capability: echoes-user-text</li><li><b>coupon-abuser</b>: needs capability: coupons</li><li><b>retry-spammer</b>: needs capability: payment-can-fail</li></ul>
+<h2>How to read this</h2>
+<p>Every persona performs one human behaviour against the same journey. A hazard is <b>confirmed</b> only when the persona fails twice with the same typed value for the invariant. A single failure is <b>suspected</b> and never produces a repair brief. A setup error, a timeout, or a missing observation is <b>inconclusive</b> and never confirms anything.</p>
+<p class="note">Generated by Stuntman. This file makes no external requests.</p></main></body></html>
