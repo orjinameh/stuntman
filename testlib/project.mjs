@@ -8,7 +8,9 @@ import { main } from '../src/cli.mjs';
 export function tmpProject({ noReset = false } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stuntman-'));
   for (const n of ['stuntman.json', 'personas', 'fixtures', 'demo']) fs.cpSync(path.join(PACKAGE_ROOT, n), path.join(dir, n), { recursive: true });
-  if (noReset) { const f = path.join(dir, 'stuntman.json'); const c = JSON.parse(fs.readFileSync(f, 'utf8')); delete c.app.reset; fs.writeFileSync(f, JSON.stringify(c, null, 2)); }
+  // The shipped demo app may already carry the F-001 repair; tests exercise the unfixed baseline copy.
+  fs.copyFileSync(path.join(PACKAGE_ROOT, 'demo/baseline/server.mjs'), path.join(dir, 'demo/app/server.mjs'));
+  if (noReset) { const f = path.join(dir, 'stuntman.json'); const c = JSON.parse(fs.readFileSync(f, 'utf8')); delete c.app.reset; delete c.app.restart_cmd; delete c.app.start_cmd; fs.writeFileSync(f, JSON.stringify(c, null, 2)); }
   execFileSync('git', ['init', '-q'], { cwd: dir });
   execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'add', '-A'], { cwd: dir });
   execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init'], { cwd: dir });

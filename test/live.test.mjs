@@ -82,3 +82,77 @@ test('live audit resets the app before every run and stops if the reset fails', 
     });
   } finally { srv.close(); }
 });
+
+test('heal retries attempts that were not usable and only judges usable runs', async () => {
+  const dir = tmpProject({ noReset: true });
+  await cli(dir, ['audit', '--fixture-state', 'broken']); await cli(dir, ['lock']);
+  const counter = path.join(os.tmpdir(), `fkc-${Date.now()}`);
+  await withEnv({ KANE_BIN: FAKE, FAKE_KANE_SEQ: 'unachievable,clean,unachievable,clean', FAKE_KANE_COUNTER: counter }, async () => {
+    const r = await cli(dir, ['heal', 'F-001', '--agent-cmd', 'true', '--live', '--settle', '0']);
+    assert.equal(r.code, 0); assert.match(r.out, /CLEAN/); assert.match(r.out, /2 usable of 4 attempts/); assert.match(r.out, /attempt 1: not usable/);
+  });
+  const counter2 = path.join(os.tmpdir(), `fkc2-${Date.now()}`);
+  await withEnv({ KANE_BIN: FAKE, FAKE_KANE_SEQ: 'unachievable', FAKE_KANE_COUNTER: counter2 }, async () => {
+    const r = await cli(dir, ['heal', 'F-001', '--agent-cmd', 'true', '--live', '--settle', '0', '--attempts', '3']);
+    assert.equal(r.code, 2); assert.match(r.out, /INCONCLUSIVE/); assert.match(r.out, /only 0 of 3 attempts were usable/);
+  });
+  const counter3 = path.join(os.tmpdir(), `fkc3-${Date.now()}`);
+  await withEnv({ KANE_BIN: FAKE, FAKE_KANE_SEQ: 'double,double', FAKE_KANE_COUNTER: counter3 }, async () => {
+    const r = await cli(dir, ['heal', 'F-001', '--agent-cmd', 'true', '--live', '--settle', '0']);
+    assert.equal(r.code, 1); assert.match(r.out, /STILL REPRODUCIBLE/);
+  });
+});
+
+test('heal restarts the app itself (restart_cmd) and waits for health before re-auditing', async () => {
+  const http = await import('node:http');
+  const srv = http.createServer((q, r) => r.end('{"ok":true}'));
+  await new Promise((r) => srv.listen(0, r));
+  const dir = tmpProject({ noReset: true });
+  const marker = path.join(dir, 'restarted.txt');
+  const f = path.join(dir, 'stuntman.json'); const cfg = JSON.parse(fs.readFileSync(f, 'utf8'));
+  cfg.app.base_url = `http://127.0.0.1:${srv.address().port}`; cfg.app.restart_cmd = `echo restarted > ${marker}`; delete cfg.app.probe;
+  fs.writeFileSync(f, JSON.stringify(cfg));
+  await cli(dir, ['audit', '--fixture-state', 'broken']); await cli(dir, ['lock']);
+  try {
+    await withEnv({ KANE_BIN: FAKE, FAKE_KANE_MODE: 'clean' }, async () => {
+      const r = await cli(dir, ['heal', 'F-001', '--agent-cmd', 'true', '--live']);
+      assert.equal(r.code, 0); assert.match(r.out, /restarting the app/);
+    });
+    assert.equal(fs.readFileSync(marker, 'utf8').trim(), 'restarted');
+  } finally { srv.close(); }
+});
+
+test('stopApp kills exactly the listener on the port, and never the caller', async () => {
+  const { spawn } = await import('node:child_process');
+  const { listeningPids, stopApp } = await import('../src/restart.mjs');
+  const port = 21000 + Math.floor(Math.random() * 5000);
+  const child = spawn('node', ['-e', `require('http').createServer((q,r)=>r.end('x')).listen(${port})`], { stdio: 'ignore' });
+  for (let i = 0; i < 50 && !listeningPids(port).length; i++) await new Promise((r) => setTimeout(r, 100));
+  assert.deepEqual(listeningPids(port), [child.pid]);
+  assert.ok(!listeningPids(port).includes(process.pid));
+  assert.equal(await stopApp({ app: { base_url: `http://127.0.0.1:${port}` } }), true);
+  assert.deepEqual(listeningPids(port), []);
+});
+
+test('heal with start_cmd stops the old listener, starts the new one and waits for health', async () => {
+  const { spawn } = await import('node:child_process');
+  const { listeningPids } = await import('../src/restart.mjs');
+  const port = 26000 + Math.floor(Math.random() * 5000);
+  const script = path.join(os.tmpdir(), `srv-${port}.cjs`);
+  fs.writeFileSync(script, `require('http').createServer((q,r)=>r.end('{"ok":true}')).listen(${port});`);
+  const old = spawn('node', [script], { stdio: 'ignore' });
+  for (let i = 0; i < 50 && !listeningPids(port).length; i++) await new Promise((r) => setTimeout(r, 100));
+  const dir = tmpProject({ noReset: true });
+  const f = path.join(dir, 'stuntman.json'); const cfg = JSON.parse(fs.readFileSync(f, 'utf8'));
+  cfg.app.base_url = `http://127.0.0.1:${port}`; cfg.app.start_cmd = `nohup node ${script} > /dev/null 2>&1 &`; delete cfg.app.probe;
+  fs.writeFileSync(f, JSON.stringify(cfg));
+  await cli(dir, ['audit', '--fixture-state', 'broken']); await cli(dir, ['lock']);
+  try {
+    await withEnv({ KANE_BIN: FAKE, FAKE_KANE_MODE: 'clean' }, async () => {
+      const r = await cli(dir, ['heal', 'F-001', '--agent-cmd', 'echo fixed demo/app/server.mjs', '--live']);
+      assert.equal(r.code, 0); assert.match(r.out, /CLEAN/);   // the agent command itself contains the app path and must survive
+    });
+    const now = listeningPids(port);
+    assert.equal(now.length, 1); assert.notEqual(now[0], old.pid);
+  } finally { for (const p of listeningPids(port)) { try { process.kill(p); } catch { /* gone */ } } try { old.kill(); } catch { /* gone */ } }
+});

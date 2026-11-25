@@ -3,7 +3,17 @@
 import fs from 'node:fs';
 const args = process.argv.slice(2);
 if (process.env.FAKE_KANE_LOG) fs.appendFileSync(process.env.FAKE_KANE_LOG, JSON.stringify(args) + '\n');
-const mode = process.env.FAKE_KANE_MODE || 'clean';
+let mode = process.env.FAKE_KANE_MODE || 'clean';
+if (process.env.FAKE_KANE_SEQ && process.env.FAKE_KANE_COUNTER) {
+  const seq = process.env.FAKE_KANE_SEQ.split(',');
+  let n = 0; try { n = Number(fs.readFileSync(process.env.FAKE_KANE_COUNTER, 'utf8')) || 0; } catch { /* first call */ }
+  fs.writeFileSync(process.env.FAKE_KANE_COUNTER, String(n + 1));
+  mode = seq[Math.min(n, seq.length - 1)];
+}
+if (mode === 'unachievable') {
+  process.stdout.write(JSON.stringify({ type: 'run_end', status: 'failed', reason: 'The final assertion cannot evaluate because displayed_total was never stored.', duration: 2, credits_consumed: 10, context: { variables: { final_heading: { value: '' } } }, reason_code: 'assertion_error.step_not_achievable', session_dir: '/tmp/none' }) + '\n');
+  process.exit(1);
+}
 process.stderr.write('progress UI noise on stderr\n');
 if (mode === 'error') { process.stdout.write('not json at all\n'); process.exit(2); }
 if (args[0] === 'testmd') {

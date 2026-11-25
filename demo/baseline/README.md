@@ -1,0 +1,1 @@
+`server.mjs` here is the demo store exactly as a fresh agent session wrote it, **before** the F-001 repair. `demo/app/server.mjs` may carry the repair (see `demo/patches/0002-charge-never-exceeds-displayed-total.patch`). Tests and the stand-in agent use this unfixed baseline.

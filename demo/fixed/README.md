@@ -1,0 +1,1 @@
+`server.mjs` here is `demo/baseline/server.mjs` plus `demo/patches/0002-charge-never-exceeds-displayed-total.patch` (the F-001 repair). Copy it over `demo/app/server.mjs` to apply the repair: `cp demo/fixed/server.mjs demo/app/server.mjs`.

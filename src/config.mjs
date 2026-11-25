@@ -43,6 +43,9 @@ export function validateConfig(cfg) {
   for (const o of cfg.observations) need(o.name && o.instruction, "every observation needs 'name' and 'instruction' ('url' is optional: without it the value is read from the page the persona ended on)");
   need(Array.isArray(cfg.personas) && cfg.personas.length > 0, "'personas' must be a non-empty array of ids (or [\"auto\"])");
   need(cfg.capabilities === undefined || Array.isArray(cfg.capabilities), "'capabilities' must be an array of names");
+  need(cfg.app.restart_cmd === undefined || typeof cfg.app.restart_cmd === 'string', 'app.restart_cmd must be a string');
+  need(cfg.app.start_cmd === undefined || typeof cfg.app.start_cmd === 'string', 'app.start_cmd must be a string');
+  if (cfg.app.probe !== undefined) need(cfg.app.probe && typeof cfg.app.probe.path === 'string' && cfg.app.probe.values && typeof cfg.app.probe.values === 'object', "app.probe needs 'path' and 'values'");
   const b = cfg.budget || {};
   for (const k of ['max_credits', 'estimated_credits_per_run', 'max_steps', 'timeout_seconds']) {
     need(typeof b[k] === 'number' && b[k] > 0, `budget.${k} must be a positive number`);

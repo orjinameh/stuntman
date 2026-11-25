@@ -1,0 +1,21 @@
+diff --git a/demo/app/server.mjs b/demo/app/server.mjs
+index 26e96b1..4bb0449 100644
+--- a/demo/app/server.mjs
++++ b/demo/app/server.mjs
+@@ -99,6 +99,7 @@ const server = http.createServer(async (req, res) => {
+       const lines = cartLines(state.carts[getSid(req, res)]);
+       if (!lines.length) return redirect(res, '/cart');
+       return html(res, page('Checkout', `<h1>Checkout</h1><form class="card" method="post" action="/checkout">
++<input type="hidden" name="expected_cents" value="${sum(lines)}">
+ <p>Total: <strong>${money(sum(lines))}</strong></p>
+ <label>Email<input name="email" type="email" required></label>
+ <label>Card number<input name="card" required placeholder="4242 4242 4242 4242"></label>
+@@ -113,6 +114,8 @@ const server = http.createServer(async (req, res) => {
+       const lines = cartLines(state.carts[sid]);
+       if (!lines.length) return redirect(res, '/cart');
+       if (!email || !card) return html(res, page('Checkout', `<h1>Checkout</h1><div class="card">Email and card number are required. <a href="/checkout">Back</a></div>`), 400);
++      // The customer must be charged the total they were shown: if the cart changed since this form was rendered, show the new total instead of charging.
++      if (Number(form.get('expected_cents')) !== sum(lines)) return redirect(res, '/checkout');
+       // Take the lines and empty the cart before the provider call, so a repeated submit cannot charge twice.
+       delete state.carts[sid];
+       const total = sum(lines);

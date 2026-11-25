@@ -23,7 +23,7 @@ const pay = (base, cookie) => fetch(`${base}/checkout`, { method: 'POST', redire
 const state = async (base) => (await fetch(`${base}/__state`)).json();
 
 test('AC-20 demo app serves seeded products and a normal purchase ends on the confirmation', async () => {
-  const app = await startApp(path.join(PACKAGE_ROOT, 'demo/app/server.mjs'));
+  const app = await startApp(path.join(PACKAGE_ROOT, 'demo/baseline/server.mjs'));
   try {
     assert.deepEqual(await (await fetch(`${app.base}/health`)).json(), { ok: true });
     const home = await (await fetch(`${app.base}/`)).text();
@@ -39,7 +39,7 @@ test('AC-20 demo app serves seeded products and a normal purchase ends on the co
 });
 
 test('AC-21 double submit on the shipped app: ONE order and charge, but one response sends the customer to an empty cart', async () => {
-  const app = await startApp(path.join(PACKAGE_ROOT, 'demo/app/server.mjs'));
+  const app = await startApp(path.join(PACKAGE_ROOT, 'demo/baseline/server.mjs'));
   try {
     const cookie = await cartReady(app.base);
     const rs = await Promise.all([pay(app.base, cookie), pay(app.base, cookie)]);
@@ -55,7 +55,7 @@ test('AC-21 double submit on the shipped app: ONE order and charge, but one resp
 test('AC-22 the reference patch applies with git apply; a repeat submit lands on the same confirmation', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'patched-'));
   fs.mkdirSync(path.join(dir, 'demo/app'), { recursive: true });
-  fs.copyFileSync(path.join(PACKAGE_ROOT, 'demo/app/server.mjs'), path.join(dir, 'demo/app/server.mjs'));
+  fs.copyFileSync(path.join(PACKAGE_ROOT, 'demo/baseline/server.mjs'), path.join(dir, 'demo/app/server.mjs'));
   execFileSync('git', ['apply', path.join(PACKAGE_ROOT, 'demo/patches/0001-confirm-repeat-submit.patch')], { cwd: dir });
   const app = await startApp(path.join(dir, 'demo/app/server.mjs'));
   try {
@@ -72,7 +72,7 @@ test('AC-22 the reference patch applies with git apply; a repeat submit lands on
 test('agent-fix is idempotent and rejects an unknown hazard', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'af-'));
   fs.mkdirSync(path.join(dir, 'demo/app'), { recursive: true });
-  fs.copyFileSync(path.join(PACKAGE_ROOT, 'demo/app/server.mjs'), path.join(dir, 'demo/app/server.mjs'));
+  fs.copyFileSync(path.join(PACKAGE_ROOT, 'demo/baseline/server.mjs'), path.join(dir, 'demo/app/server.mjs'));
   const brief = path.join(dir, 'b.json'); fs.writeFileSync(brief, JSON.stringify({ finding_id: 'F-001', invariant: { observation: 'final_heading' } }));
   const run = () => execFileSync('node', [path.join(PACKAGE_ROOT, 'demo/agent-fix.mjs'), brief], { cwd: dir, encoding: 'utf8' });
   assert.match(run(), /applied/); assert.match(run(), /already applied/);

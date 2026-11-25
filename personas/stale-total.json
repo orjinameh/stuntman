@@ -1,12 +1,12 @@
 {
   "id": "stale-total",
-  "version": "1.2.0",
+  "version": "1.5.0",
   "name": "Stale-total customer",
   "requires": [
     "checkout",
     "creates-record"
   ],
-  "behaviour": "You are a customer who changes your mind after seeing the total. IMPORTANT: do NOT click Pay yet. Follow the journey only as far as the checkout form (add the mug, open the cart, continue to checkout, fill in the email and the card number) and stop before clicking Pay. Read the Total shown on the checkout page and store its text as 'displayed_total'. Then use the Corner Store header link to go back to the shop and add one more item of a different product to the cart. Then press the browser Back button until you are on the checkout form again (it may still show the old total; if its fields are empty, enter the same email and card again). On that form, if it now shows an updated total, store the updated total as 'displayed_total' instead. Then click Pay once.",
+  "behaviour": "You are a customer who changes your mind after seeing the total. Follow these steps exactly, in this order. Step 1: follow the journey only as far as the checkout form (add the mug, open the cart, continue to checkout, fill in the email and the card number) and stop; do NOT click Pay. Step 2: use the Corner Store header link to go back to the shop and add one more item of a different product to the cart; you will land on the cart page. Step 3: press the browser Back button exactly twice, one press at a time, checking the page after each press: the first press shows the shop page and the second press shows the checkout form. Do not press Back a third time. If you went too far and the checkout form is not shown, press the browser Forward button once and look again. If the form's fields are empty, enter the same email and card again. Step 4: read the Total shown on this checkout form and store its text as 'displayed_total'. Do not go on to step 5 until 'displayed_total' has been stored. Step 5: click Pay once. Step 6: if the shop refuses the payment or sends you to an updated total instead of completing the order, do not pay again.",
   "captures": [
     "displayed_total"
   ],
@@ -16,5 +16,5 @@
     "at_most_observation": "displayed_total",
     "reason": "A customer must never be charged more than the total they were shown when they paid."
   },
-  "notes": "Click Pay exactly once, on the old checkout form, and only after the steps above. If the shop refuses the payment or sends you to an updated total instead of completing the order, do not pay again; just record the observations."
+  "notes": "The value 'displayed_total' must be stored in step 4, before Pay is clicked, from the form that is about to be submitted. Pay exactly once."
 }

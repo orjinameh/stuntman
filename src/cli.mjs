@@ -20,7 +20,7 @@ Usage:
                  [--concurrency N] [--allow-contract-change] [--force] [--json] [--headless]
   stuntman brief F-001 [--run <dir>] [--json]
   stuntman lock [--run <dir>] [--force]
-  stuntman heal F-001 --agent-cmd "<cmd with {brief}>" [--run <dir>] [--live] [--fixture-state fixed]
+  stuntman heal F-001 --agent-cmd "<cmd with {brief}>" [--run <dir>] [--live] [--settle <sec>] [--attempts N] [--fixture-state fixed]
   stuntman verify [--live|--fixture] [--json]
   stuntman personas [--json]
   stuntman report [--run <dir>] [--open]
@@ -118,7 +118,7 @@ async function cmdHeal(cwd, args, out) {
   const id = args._[0];
   if (!id) throw new StuntmanError("usage: stuntman heal F-001 --agent-cmd '<cmd {brief}>'");
   const project = loadProject(cwd);
-  const r = await heal(project, id, { agentCmd: args['agent-cmd'], run: args.run, live: isLive(args), fixtureState: args['fixture-state'] || 'broken', log: out, headless: args.headless === true });
+  const r = await heal(project, id, { agentCmd: args['agent-cmd'], run: args.run, live: isLive(args), fixtureState: args['fixture-state'] || 'broken', log: out, headless: args.headless === true, settle: args.settle, attempts: args.attempts });
   return r.exit;
 }
 

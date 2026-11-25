@@ -49,3 +49,15 @@ test('text invariants compare normalised text and confirm on the same typed valu
   assert.equal(classify(t, [r('failed', 'Cart'), r('failed', 'Shop')]).verdict, 'suspected');
   assert.equal(classify(t, [r('failed')]).verdict, 'inconclusive');
 });
+
+test('an empty page reported as NONE counts as zero, but is not silently accepted for text invariants', () => {
+  const p = { id: 'stale-total', invariant: { observation: 'charged_total', at_most_observation: 'displayed_total', reason: 'r' } };
+  const run = (status, charged, shown) => ({ status, values: { charged_total: charged, displayed_total: shown } });
+  assert.equal(classify(p, [run('passed', 'NONE', '$49.00')]).verdict, 'clean');      // refused payment: nothing charged
+  assert.equal(classify(p, [run('passed', 'No orders', '$49.00')]).verdict, 'clean');
+  assert.equal(classify(p, [run('passed', '61', '$49.00')]).verdict, 'suspected');     // still an overcharge
+  const count = { id: 'x', invariant: { observation: 'order_count', equals: 0, reason: 'r' } };
+  assert.equal(classify(count, [{ status: 'passed', values: { order_count: 'NONE' } }]).verdict, 'clean');
+  const text = { id: 'y', invariant: { observation: 'final_heading', equals: 'Order confirmed', reason: 'r' } };
+  assert.equal(classify(text, [{ status: 'failed', values: { final_heading: 'NONE' } }]).verdict, 'suspected');
+});

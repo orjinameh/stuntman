@@ -1,0 +1,18 @@
+{
+  "test_id": "3825407d-50f1-4430-bbf0-c83adc161f38",
+  "project_id": "01M7XTA3G5AVBFRFRXQX4PFYV1",
+  "folder_id": "01M7XTASX7TJ8V1E84GCEZ2ZQB",
+  "org_id": "3443608",
+  "session_name": "stuntman-stale-total",
+  "commit_id": "68afdd9a-ec3d-48e9-8939-61db4f20482b",
+  "testcase_id": "01M884BX9FY0NCKDBDEYJ2CT8F",
+  "executions": [
+    {
+      "execution_id": "7233a497-5ec4-4d6f-80a8-56f6f0f2b401",
+      "run_kind": "author",
+      "status": "passed",
+      "valid": true,
+      "at": "2026-11-25T01:21:06.110Z"
+    }
+  ]
+}

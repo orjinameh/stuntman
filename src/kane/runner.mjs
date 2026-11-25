@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { StuntmanError } from '../util.mjs';
 import { parseNdjson, buildRecord } from './parse.mjs';
+import { probeApp, mergeProbe } from '../probe.mjs';
 
 const RAW_CAP = 5 * 1024 * 1024;
 
@@ -48,7 +49,9 @@ export function makeLiveRunner(config) {
       const args = buildRunArgs(config, objective, { headless });
       const { stdout, stderr, code } = await spawnKane(bin, args, { timeoutS: config.budget.timeout_seconds });
       const events = parseNdjson(stdout);
-      return buildRecord({ persona: persona.id, index, events, exitCode: code, stderr, rawText: stdout, mode: 'live' });
+      const rec = buildRecord({ persona: persona.id, index, events, exitCode: code, stderr, rawText: stdout, mode: 'live' });
+      // Server-side observations come from the app's own state, read right after the run (before the next reset).
+      return mergeProbe(rec, await probeApp(config));
     },
   };
 }

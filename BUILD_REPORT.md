@@ -49,3 +49,18 @@ The main demo app came back clean in a real Kane run, so a seeded-bug positive c
 
 ## Persona expansion and selection
 Added journey-aware persona selection (`capabilities` in `stuntman.json`, `requires` in persona packs, `"personas": ["auto"]`), a two-value invariant (`equals_observation`, used by `stale-total`) and personas `abandoner`, `stale-total`, `chaotic-input` plus two drafts. While adding this I found the working copy already held an earlier partial version of the same feature (config `capabilities`, `selectPersonas`, `src/invariant.mjs`) that I had not accounted for; I kept its conventions and removed my duplicate layer. None of the new personas has been run against real Kane. Fixtures for them show clean results and encode no predicted failures.
+
+## Oracle flaw found by heal (read this)
+The first F-001 confirmation compared the charge with a total Kane read once, before the cart changed. When the repair was applied, the re-audit still reported `$61.00` vs `$49.00`; with the repair loaded a stale form is refused, so the form submitted must have shown $61 and the comparison value was stale. Persona 1.3.0 reads the total from the form being submitted, immediately before Pay. Until the baseline is re-audited with 1.3.0, F-001 is unproven. `heal` now waits for a file-watcher restart (`--settle`) and saves the re-audit transcripts under `runs/<ts>/heal/`.
+
+## Heal attempts
+Kane's agent sometimes cannot execute a persona (skipped store step, overshot Back, empty page). `heal --attempts N` (default 4 live) reports every attempt but only counts usable runs (a value was captured and judged); CLEAN or STILL REPRODUCIBLE needs two usable runs, otherwise the result stays INCONCLUSIVE. This tolerates agent flakiness without weakening the invariant, and the output states how many attempts were usable.
+
+## Ground-truth probe
+After four heals where Kane would not capture a value from an empty orders page, server-side observations (order count, total charged) are read from the app's own `/__state` after each live run (`app.probe`, declarative spec). The probe overrides Kane for what it measures and the report keeps both readings. The probe is optional and requires the app to expose a state endpoint; the demo store does. A Kane run that exits with an error code after `run_end` now still counts when the values needed for the invariant exist.
+
+## Deterministic restart
+`heal` previously waited a fixed time for a file watcher (`node --watch`) to restart the app and never confirmed it did, so a re-audit could silently run against the old code. `app.restart_cmd` plus a `/health` wait makes the repaired code the code under test.
+
+## Restart fix
+The first restart used `pkill -f` and killed `heal` itself. Now: `app.start_cmd` plus a port-based stop (`/proc/net/tcp` and `/proc/*/fd`, Linux only). On other platforms start and stop the app yourself and omit `start_cmd`; `heal` then falls back to a short wait.

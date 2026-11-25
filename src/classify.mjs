@@ -2,8 +2,12 @@ import { parseNumber } from './util.mjs';
 import { refOf } from './invariant.mjs';
 
 /** A run's relationship to the persona invariant. */
+/** An empty page is reported as a word (NONE, no orders, ...). For numeric comparisons that means zero. */
+const ZERO_WORD = /^\s*(none|no orders?|nothing|empty|n\/a)\s*\.?\s*$/i;
+const asZero = (v) => (typeof v === 'string' && ZERO_WORD.test(v) ? '0' : v);
+
 export function judgeRun(run, invariant) {
-  if (run.status === 'error') return { kind: 'error', note: run.reason || 'setup error' };
+  if (run.status === 'error' && !(run.has_run_end && run.values && run.values[invariant.observation] !== undefined)) return { kind: 'error', note: run.reason || 'setup error' };
   if (run.status === 'timeout') return { kind: 'timeout', note: run.reason || 'timed out' };
   // Kane could not perform the persona's behaviour (e.g. an in-flight second click): the product was never exercised.
   if (run.reason_code && /step_not_achievable/.test(run.reason_code)) return { kind: 'unachievable', note: `Kane could not perform the persona's behaviour (${run.reason_code}): ${run.reason || ''}`.trim() };
@@ -16,7 +20,7 @@ export function judgeRun(run, invariant) {
   if (invariant.at_most_observation) {
     // Harm-style bound: the observed value must not exceed another value stored in the same run (a lower value, e.g. a refused charge, is safe).
     const other = run.values ? run.values[invariant.at_most_observation] : undefined;
-    const a = parseNumber(raw); const b = parseNumber(other);
+    const a = parseNumber(asZero(raw)); const b = parseNumber(asZero(other));
     if (a === null || b === null) return { kind: 'missing', note: `could not compare '${invariant.observation}' with '${invariant.at_most_observation}' (${other === undefined ? 'not captured' : 'not numeric'})` };
     if (a > b + 0.005) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}>${invariant.at_most_observation}:${a}/${b}`, note: `${invariant.observation} was ${raw}, more than ${invariant.at_most_observation} (${other})` };
     return { kind: 'ok', observed: String(raw) };
@@ -25,7 +29,7 @@ export function judgeRun(run, invariant) {
     // Compare two values captured in the same run (e.g. the amount charged vs the total the page displayed).
     const other = run.values ? run.values[invariant.equals_observation] : undefined;
     if (other === undefined || other === null || String(other).trim() === '') return { kind: 'missing', note: `observation '${invariant.equals_observation}' was not captured` };
-    const a = parseNumber(raw); const b = parseNumber(other);
+    const a = parseNumber(asZero(raw)); const b = parseNumber(asZero(other));
     const same = a !== null && b !== null ? a === b : String(raw).trim().toLowerCase() === String(other).trim().toLowerCase();
     if (!same) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}!=${invariant.equals_observation}:${a ?? raw}/${b ?? other}`, note: `${invariant.observation} was ${raw} but ${invariant.equals_observation} was ${other}` };
     return { kind: 'ok', observed: String(raw) };
@@ -37,7 +41,7 @@ export function judgeRun(run, invariant) {
     if (norm(raw) !== norm(invariant.equals)) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}=${norm(raw)}`, note: `${invariant.observation} was "${raw}", expected "${invariant.equals}"` };
     return { kind: 'ok', observed: String(raw) };
   }
-  const observed = parseNumber(raw);
+  const observed = parseNumber(asZero(raw));
   if (observed === null) return { kind: 'missing', note: `observation '${invariant.observation}' is not numeric: ${raw}` };
   if (observed !== expected) return { kind: 'violation', observed: String(raw), key: `typed:${invariant.observation}=${observed}`, note: `${invariant.observation} was ${raw}, expected ${invariant.equals}` };
   return { kind: 'ok', observed: String(raw) };

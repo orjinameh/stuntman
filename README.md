@@ -103,6 +103,14 @@ Stuntman does not run every behaviour blindly. Each persona declares what it `re
 
 A clean audit only means something if the detector can also catch a bug. `demo/control/` is a store with a **seeded** double-order bug (written by the builder, labelled as such) plus a repaired twin. Run `cd demo/control && PORT=3001 node app/server.mjs &` then `node ../../bin/stuntman.mjs audit --live --headless`. The main demo (`demo/app`, written by a fresh agent session) is the realistic target; the control proves detection.
 
+## Restarting the app under test
+
+`app.start_cmd` in `stuntman.json` tells `heal` how to start the app. After the repair is applied `heal` stops whatever is listening on the app's port (found through `/proc`, never by matching command lines, so it cannot kill itself), runs the start command detached, waits until `/health` answers, and only then re-audits, so the repaired code is guaranteed to be the code under test instead of depending on a file watcher. Without `restart_cmd` it falls back to a short wait.
+
+## Ground-truth probe
+
+Kane drives the human behaviour and reads what is on screen; it is unreliable at reading an *empty* page (a refused payment leaves an empty orders list). So `app.probe` in `stuntman.json` names an endpoint (the demo store's `/__state`) and a small declarative spec (`count`, `sum`) from which Stuntman derives server-side values such as `order_count` and `charged_total` right after each live run. The probe is authoritative for what it measures; Kane's own reading is kept in the report (`kane_values`, `probe_conflicts`). If the probe fails, Kane's values are used. The spec is data, never code, and the probe is optional: apps without a state endpoint keep working through Kane's reading.
+
 ## Commands
 
 ```
@@ -111,7 +119,7 @@ stuntman audit [--live|--fixture] [--fixture-state broken|fixed] [--persona id] 
                [--allow-contract-change] [--force] [--json] [--headless]
 stuntman brief F-001 [--run <dir>] [--json]
 stuntman lock [--run <dir>] [--force]
-stuntman heal F-001 --agent-cmd "<cmd with {brief} {brief_json} {finding_id}>" [--live] [--fixture-state fixed]
+stuntman heal F-001 --agent-cmd "<cmd with {brief} {brief_json} {finding_id}>" [--live] [--attempts N] [--settle sec] [--fixture-state fixed]
 stuntman verify [--live|--fixture] [--json]
 stuntman personas [--json]
 stuntman report [--run <dir>] [--open]

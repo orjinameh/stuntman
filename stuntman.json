@@ -9,7 +9,21 @@
     "reset": {
       "method": "POST",
       "path": "/admin/reset"
-    }
+    },
+    "probe": {
+      "path": "/__state",
+      "values": {
+        "order_count": {
+          "count": "orders"
+        },
+        "charged_total": {
+          "sum": "charges",
+          "field": "cents",
+          "divide": 100
+        }
+      }
+    },
+    "start_cmd": "nohup node demo/app/server.mjs > /tmp/stuntman-app.log 2>&1 &"
   },
   "journey": {
     "id": "buy-a-mug",
@@ -30,12 +44,12 @@
     {
       "name": "order_count",
       "url": "/orders",
-      "instruction": "Count the order rows on the orders page (not the header row) and store the number as 'order_count'."
+      "instruction": "Count the order rows on the orders page (not the header row) and store the number as 'order_count'. If there are no order rows at all, store the word NONE as 'order_count'."
     },
     {
       "name": "charged_total",
       "url": "/orders",
-      "instruction": "Add up every amount in the Charged column of the orders page and store the total as 'charged_total'."
+      "instruction": "Add up every amount in the Charged column of the orders page and store the total as 'charged_total'. If there are no order rows at all, store the word NONE as 'charged_total'."
     }
   ],
   "personas": [
