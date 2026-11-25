@@ -1,30 +1,28 @@
 # Stuntman
 
-**A customer clicked Pay twice. The payment went through. They landed on an empty cart with no confirmation. Your agent's tests passed.**
+**A customer was shown a total of $49.00 and charged $61.** The app's own agent-written tests passed. Stuntman found it in a real browser, proved it twice, locked it as a test, got a repair, and re-audited clean.
 
 Your agent tested the happy path. Stuntman plays everyone else.
 
-Stuntman is a zero-dependency Node CLI. It turns one plain-English purchase journey into a cast of adversarial human behaviours (the impatient double-clicker, the refresher, the back-button user), proves which hazards are real in a real browser with [Kane CLI](https://github.com/LambdaTest/kane-cli), hands your coding agent a typed repair brief, and locks every confirmed hazard into a committed `_test.md` that replays for free.
+Stuntman is a zero-dependency Node CLI. You describe one purchase journey in plain English; it compiles a cast of adversarial human behaviours into [Kane CLI](https://github.com/LambdaTest/kane-cli) objectives, runs them in a real browser, and only reports a hazard when it reproduces twice with the same typed value. A confirmed hazard becomes a repair brief for your coding agent, a locked `_test.md` written **before** the fix, and a re-audit of the repaired app against that locked contract.
 
-Built for the KaneCLI Online Hackathon (TestMu AI, 12–26 Nov 2026). Judged on Ships, Verified, Closed loop, Craft.
+Built for the KaneCLI Online Hackathon (TestMu AI). Judged on Ships, Verified, Closed loop, Craft.
 
-## The cold open
+## What it found (real Kane runs, kane-cli 0.10.7, headless Chrome)
 
-```
-persona      sev  verdict    observed                                          runs  finding
-───────────  ───  ─────────  ────────────────────────────────────────────────  ────  ───────
-impatient    P1   CONFIRMED  final_heading = "Cart" (1 order, $49.00 charged)  2     F-001
-refresher    P1   suspected  final_heading = "Cart" (1 order, $49.00 charged)  2     —
-back-button  P0   clean     1 order, $49.00 charged                           1     —
-slow-submit  P0   clean     1 order, $49.00 charged                           1     —
-returning    P2   clean     2 orders, $98.00 charged                          1     —
-```
+The target is a small store (`demo/app`) written by a fresh Claude session from `demo/BRIEF.md`; nobody planted a bug in it.
 
-The customer was charged once, correctly, but ended on "Cart" instead of "Order confirmed". Someone who sees an empty cart after paying assumes it failed and may pay again. `refresher` failed once in two runs, so it is only *suspected*: **one failure is not a finding**.
+| Step | Result |
+|---|---|
+| Audit, persona `stale-total` (adds an item after seeing the total, goes Back to the old checkout form, pays) | **CONFIRMED**, 2 of 2 runs: Kane read **$49.00** on the form it submitted, the shop charged **61** (F-001) |
+| Brief + lock | repair brief written, contract locked **before** the fix (`stuntman.lock`, `tests/stuntman-stale-total_test.md`) |
+| Repair | the form now carries the displayed total; the server refuses to charge when the cart total has changed (`demo/patches/0002-…`, `demo/fixed/server.mjs`) |
+| Re-audit after repair (`heal`) | **CLEAN**, 2 of 2 usable runs honoured "never charged more than shown" |
+| Replay of the locked test (`verify`) | **PASS**, `kane-cli testmd run`, 161 s |
 
-The demo store (`demo/app`) was written by a fresh Claude session from `demo/BRIEF.md`. It already protects against a double charge; the hazard Stuntman targets is the screen the customer is left on. The fixture table is a prediction from reading that code, and only a live Kane run can confirm it.
+Evidence is in `examples/live-f001-report/` (`report.html`, `report.json`, raw Kane transcripts, heal re-audit transcripts, the brief). `LIVE_RUN.md` is the honest log of every live run, including the failures.
 
-> **Honesty note.** The table above comes from the offline **fixture mode**: hand-authored files in Kane's documented `run_end` shape, so anyone can reproduce the flow with no account. It is a deterministic demo of the classifier, report, brief, lock and heal loop. It is **not** live Kane evidence, and every report says `FIXTURE` on it. Live mode (`--live`) is implemented against the documented Kane CLI interface but has **not been run against a real Kane install yet**: see `BUILD_REPORT.md` and `LIVE_RUN.md`.
+**Disclosures.** The repair was written by Claude in the same chat that built the tool and applied with a `cp` (`heal --agent-cmd` accepts any agent command; a fully autonomous agent fix was not demonstrated). The "before" confirmation and the "after" re-audit used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
 
 ## Quick start (no Kane account, no network)
 
