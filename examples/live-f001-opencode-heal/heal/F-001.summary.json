@@ -1,0 +1,100 @@
+[
+  {
+    "persona": "stale-total",
+    "index": 1,
+    "exit_code": 0,
+    "status": "passed",
+    "reason": "Objective completed",
+    "stderr_text": "\nUpdate available: 0.10.7 → 0.10.9 — run `npm install -g @testmuai/kane-cli@latest` to update\n\nSkill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nRunning on: Desktop · Chrome\nevidence: view locally with `kane-cli evidence serve /home/codespace/.testmuai/kaneai/sessions/b3257e4e-0942-4f54-ae9d-23a2e9d00a41/evidence/d682b47b-1ac5-4812-8406-4880ac8c7db9.evidence`\n",
+    "values": {
+      "url": "http://localhost:3000/orders",
+      "displayed_total": "$49.00",
+      "final_heading": "Order confirmed",
+      "order_count": "1",
+      "charged_total": "49.00",
+      "checkout_form_shown_after_back": "true",
+      "checkout_form_fields_empty": "true",
+      "payment_refused": "false",
+      "updated_total_sent": "false",
+      "charged_total_not_more_than_displayed_total": "49"
+    },
+    "duration": 235.8,
+    "credits": 69.7180565,
+    "reason_code": "success.complete",
+    "kane_verdict": null,
+    "session_dir": "/home/codespace/.testmuai/kaneai/sessions/b3257e4e-0942-4f54-ae9d-23a2e9d00a41",
+    "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M8A4J9TP8ZSWFHY9EHWQPM3Q/dashboard/share/US_SXHTR1LQZIEDLZTIXD3LAHICB8K4UT0LMX3C3BMSPY7747CE8YGMW59C1DS5APAB?type=summary&agentView=true&fqdn=summary-page",
+    "has_run_end": true,
+    "mode": "live",
+    "raw_path": null,
+    "kane_values": {
+      "url": "http://localhost:3000/orders",
+      "displayed_total": "$49.00",
+      "final_heading": "Order confirmed",
+      "order_count": "1",
+      "charged_total": "49",
+      "checkout_form_shown_after_back": "true",
+      "checkout_form_fields_empty": "true",
+      "payment_refused": "false",
+      "updated_total_sent": "false",
+      "charged_total_not_more_than_displayed_total": "49"
+    },
+    "probe": {
+      "order_count": "1",
+      "charged_total": "49.00"
+    },
+    "probe_error": null,
+    "probe_conflicts": [
+      "charged_total"
+    ]
+  },
+  {
+    "persona": "stale-total",
+    "index": 2,
+    "exit_code": 0,
+    "status": "passed",
+    "reason": "Objective completed",
+    "stderr_text": "\nUpdate available: 0.10.7 → 0.10.9 — run `npm install -g @testmuai/kane-cli@latest` to update\n\nSkill update available: not installed → 0.1.4 — run `kane-cli install skill`\n\nRunning on: Desktop · Chrome\nevidence: view locally with `kane-cli evidence serve /home/codespace/.testmuai/kaneai/sessions/c72b52b8-1df9-43e6-8335-8f73291723e5/evidence/54b9f833-2381-434d-9b43-664ba1d5eb71.evidence`\n",
+    "values": {
+      "url": "http://localhost:3000/orders",
+      "final_heading": "Order confirmed",
+      "displayed_total": "$49.00",
+      "order_count": "1",
+      "charged_total": "49.00",
+      "checkout_form_shown_after_back": "true",
+      "checkout_form_fields_empty": "false",
+      "order_confirmed_shown": "true",
+      "payment_refused": "false",
+      "updated_total_sent": "false",
+      "charged_total_not_more_than_displayed_total": "$49.00"
+    },
+    "duration": 228.4,
+    "credits": 58.99712200000001,
+    "reason_code": "success.complete",
+    "kane_verdict": null,
+    "session_dir": "/home/codespace/.testmuai/kaneai/sessions/c72b52b8-1df9-43e6-8335-8f73291723e5",
+    "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M8A4V4QQ26Q0M6KDJDC1QETX/dashboard/share/US_PZ8W874FINJL42PTCGIY46SR9M6WC6P1EGADASSE1J5Y4LYRYAWD5HWZOP90G03C?type=summary&agentView=true&fqdn=summary-page",
+    "has_run_end": true,
+    "mode": "live",
+    "raw_path": null,
+    "kane_values": {
+      "url": "http://localhost:3000/orders",
+      "final_heading": "Order confirmed",
+      "displayed_total": "$49.00",
+      "order_count": "1",
+      "charged_total": "$49.00",
+      "checkout_form_shown_after_back": "true",
+      "checkout_form_fields_empty": "false",
+      "order_confirmed_shown": "true",
+      "payment_refused": "false",
+      "updated_total_sent": "false",
+      "charged_total_not_more_than_displayed_total": "$49.00"
+    },
+    "probe": {
+      "order_count": "1",
+      "charged_total": "49.00"
+    },
+    "probe_error": null,
+    "probe_conflicts": []
+  }
+]

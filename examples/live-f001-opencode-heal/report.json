@@ -1,0 +1,142 @@
+{
+  "schema": "stuntman.report/1",
+  "mode": "live",
+  "fixture_state": null,
+  "app": {
+    "name": "Corner Store",
+    "base_url": "http://localhost:3000",
+    "suspects": [
+      "demo/app/server.mjs"
+    ],
+    "reset": {
+      "method": "POST",
+      "path": "/admin/reset"
+    }
+  },
+  "journey": {
+    "id": "buy-a-mug",
+    "title": "Buy a mug as a guest",
+    "steps": [
+      "Add the \"Harbor Mug\" to the cart.",
+      "Open the cart and continue to checkout.",
+      "Enter buyer@example.test as the email and pay with the test card 4242 4242 4242 4242."
+    ]
+  },
+  "commit": "7f6f7d1",
+  "started_at": "2026-11-21T16:26:06.330Z",
+  "finished_at": "2026-11-21T16:32:42.726Z",
+  "contract_hash": "9cdef2dc58bd88955216f07a5eef14f7421543220db760e4e773e23570b2c2b9",
+  "summary": {
+    "confirmed": 1,
+    "suspected": 0,
+    "clean": 0,
+    "inconclusive": 0,
+    "skipped": 0,
+    "credits": 122.8
+  },
+  "budget_ceiling_hit": false,
+  "personas": [
+    {
+      "id": "stale-total",
+      "name": "Stale-total customer",
+      "severity": "P1",
+      "verdict": "confirmed",
+      "basis": "2 of 2 runs failed with the same typed violation (charged_total was 61, more than displayed_total ($49.00))",
+      "observed": "61",
+      "invariant": {
+        "observation": "charged_total",
+        "at_most_observation": "displayed_total",
+        "reason": "A customer must never be charged more than the total they were shown when they paid."
+      },
+      "runs": [
+        {
+          "persona": "stale-total",
+          "index": 1,
+          "exit_code": 1,
+          "status": "failed",
+          "reason": "Final verification failed: \"{{charged_total}} is no more than the value stored as {{displayed_total}}.\"",
+          "values": {
+            "displayed_total": "$49.00",
+            "final_heading": "Order confirmed",
+            "order_count": "1",
+            "charged_total": "61",
+            "checkout_form_fields_empty": "false",
+            "order_confirmed_visible": "true",
+            "payment_refused": "false",
+            "updated_total_instead_of_order_completion": "false",
+            "page_shows_no_orders_for_order_count": "true",
+            "page_shows_no_orders_for_charged_total": "true",
+            "charged_total_no_more_than_displayed_total": "61"
+          },
+          "duration": 177.9,
+          "credits": 63.7866455,
+          "reason_code": "assertion_error.final_verification",
+          "kane_verdict": {
+            "status": "broken",
+            "family": "automation_bug",
+            "root_cause": "The agent incorrectly concluded that there were no orders even though the Orders page showed one row with a $61.00 charge. It then ran the final check without storing the required values, so the comparison used unresolved placeholders rather than amounts."
+          },
+          "session_dir": "/home/codespace/.testmuai/kaneai/sessions/8adf20e3-fc73-43d8-814e-46ab1052632a",
+          "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M7ZEVWD051CDS8ZVR4Q7NWBD/dashboard/share/US_LDC0UXUA54N0T1ZRWXKJY072G4I5NEQ2Y5QMYME2O1VJETX6E0IJOWG51TIA1WAF?type=summary&agentView=true&fqdn=summary-page",
+          "has_run_end": true,
+          "mode": "live",
+          "raw_path": "raw/stale-total.run1.ndjson"
+        },
+        {
+          "persona": "stale-total",
+          "index": 2,
+          "exit_code": 1,
+          "status": "failed",
+          "reason": "Final verification failed: \"{{charged_total}} is no more than the value you stored as {{displayed_total}}.\"",
+          "values": {
+            "displayed_total": "$49.00",
+            "final_heading": "Order confirmed",
+            "order_count": "1",
+            "charged_total": "61.00",
+            "checkout_form_fields_empty": "false",
+            "order_confirmed_visible": "true",
+            "shop_refuses_payment": "false",
+            "shop_sends_updated_total": "false",
+            "page_orders_present_check": "true",
+            "page_orders_present_check_2": "true",
+            "charged_total_not_more_than_displayed_total_check": "61.00"
+          },
+          "duration": 190.8,
+          "credits": 59.01993949999999,
+          "reason_code": "assertion_error.final_verification",
+          "kane_verdict": {
+            "status": "broken",
+            "family": "automation_bug",
+            "root_cause": "The agent incorrectly read the Orders page as having no orders. The page shown in the run contains one order, with $61.00 in both Total and Charged, but the agent did not count it or save the charged amount before the final comparison."
+          },
+          "session_dir": "/home/codespace/.testmuai/kaneai/sessions/b1cf7cd2-6d1a-48cf-9a61-8391d3c57f54",
+          "test_url": "https://test-manager.lambdatest.com/projects/01M7XTA3G5AVBFRFRXQX4PFYV1/test-cases/01M7ZF1R61QJQB54J9CN8WGQX0/dashboard/share/US_SUIGHK5QMKWNQL0X89AOM18O5TBMA0LZ9I37T8P5X4EQ07U2FXRJ911U7N0A14J8?type=summary&agentView=true&fqdn=summary-page",
+          "has_run_end": true,
+          "mode": "live",
+          "raw_path": "raw/stale-total.run2.ndjson"
+        }
+      ],
+      "finding_id": "F-001"
+    }
+  ],
+  "evidence": {
+    "pack": "/home/codespace/.testmuai/kaneai/sessions/8adf20e3-fc73-43d8-814e-46ab1052632a/evidence/abde93e2-b388-4c9d-896c-270c9c3c80c9.evidence",
+    "screenshot_b64": null,
+    "note": "pack has no step screenshot"
+  },
+  "not_applicable": [
+    {
+      "id": "chaotic-input",
+      "reason": "needs capability: echoes-user-text"
+    },
+    {
+      "id": "coupon-abuser",
+      "reason": "needs capability: coupons"
+    },
+    {
+      "id": "retry-spammer",
+      "reason": "needs capability: payment-can-fail"
+    }
+  ],
+  "run_dir": "20261121-163242"
+}

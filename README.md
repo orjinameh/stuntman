@@ -19,10 +19,11 @@ The target is a small store (`demo/app`) written by a fresh Claude session from 
 | Repair | the form now carries the displayed total; the server refuses to charge when the cart total has changed (`demo/patches/0002-…`, `demo/fixed/server.mjs`) |
 | Re-audit after repair (`heal`) | **CLEAN**, 2 of 2 usable runs honoured "never charged more than shown" |
 | Replay of the locked test (`verify`) | **PASS**, `kane-cli testmd run`, 161 s |
+| **Autonomous repair** (`heal` with OpenCode, model `opencode/big-pickle`) | the agent read only Kane's repair brief and edited the shop itself: each checkout form now carries a server-side draft token bound to the session and the exact total shown; `POST /checkout` charges that snapshot, consumes only those items and is idempotent on replay. Re-audit **CLEAN**, 2 of 2 usable runs. The locked contract was untouched (checked by the adapter) |
 
 Evidence is in `examples/live-f001-report/` (`report.html`, `report.json`, raw Kane transcripts, heal re-audit transcripts, the brief). `LIVE_RUN.md` is the honest log of every live run, including the failures.
 
-**Disclosures.** The repair was written by Claude in the same chat that built the tool and applied with a `cp` (`heal --agent-cmd` accepts any agent command; a fully autonomous agent fix was not demonstrated). The "before" confirmation and the "after" re-audit used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
+**Disclosures.** Two repairs were run against the same finding: first one I wrote (`demo/fixed/server.mjs`, applied with `cp`), then an autonomous OpenCode repair through `heal --agent-cmd 'node demo/agent-run.mjs {brief}'`; `demo/app/server.mjs` now holds the OpenCode version. During the OpenCode run the pre-written repair was moved out of the working tree, but the first version of that adapter moved it to a hidden directory *inside* the repo whose name was visible in a directory listing (the agent's solution is a different design, so it did not copy it; later versions move it to a random temp directory). The agent is also only *told* not to read git history. The "before" confirmation and the "after" re-audits used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
 
 ## Quick start (no Kane account, no network)
 
@@ -101,6 +102,16 @@ Stuntman does not run every behaviour blindly. Each persona declares what it `re
 
 A clean audit only means something if the detector can also catch a bug. `demo/control/` is a store with a **seeded** double-order bug (written by the builder, labelled as such) plus a repaired twin. Run `cd demo/control && PORT=3001 node app/server.mjs &` then `node ../../bin/stuntman.mjs audit --live --headless`. The main demo (`demo/app`, written by a fresh agent session) is the realistic target; the control proves detection.
 
+## Using a real coding agent
+
+`demo/agent-run.mjs` is the adapter that lets `heal` hand the repair brief to Claude Code, OpenCode or Codex (auto-detected, or force one with `STUNTMAN_AGENT=claude|opencode|codex|api`; `manual` waits while you drive an interactive agent such as the OpenCode interface; `api` calls the Anthropic API with `ANTHROPIC_API_KEY`; `STUNTMAN_AGENT_MODEL` picks the model). While the agent works, the pre-written repair is moved out of its sight, and afterwards the adapter refuses the result if the agent touched the locked contract, changed nothing, or left a file that does not parse. The agent is *told* not to read git history; that cannot be sandboxed.
+
+```bash
+cp demo/baseline/server.mjs demo/app/server.mjs     # the unfixed app
+export STUNTMAN_AGENT=opencode                       # or claude / codex / api
+node bin/stuntman.mjs heal F-001 --agent-cmd 'node demo/agent-run.mjs {brief}' --live --headless
+```
+
 ## Restarting the app under test
 
 `app.start_cmd` in `stuntman.json` tells `heal` how to start the app. After the repair is applied `heal` stops whatever is listening on the app's port (found through `/proc`, never by matching command lines, so it cannot kill itself), runs the start command detached, waits until `/health` answers, and only then re-audits, so the repaired code is guaranteed to be the code under test instead of depending on a file watcher. Without `restart_cmd` it falls back to a short wait.
@@ -141,7 +152,7 @@ bin/stuntman.mjs          CLI entry          src/        compiler, classifier, r
 personas/*.json           versioned packs    fixtures/   offline run_end transcripts (broken / fixed)
 demo/app/server.mjs       storefront (the demo, not the product)   demo/BRIEF.md  the brief it was built from
 demo/patches + agent-fix  reference repair (confirmation on repeat submit) + stand-in agent         demo/second/   second app, other hazard
-docs/idea-forge/          brief and handoff this was built from
+docs/SUBMISSION.md        submission kit (form answers, video plan, posts)
 ```
 
 ## Documents

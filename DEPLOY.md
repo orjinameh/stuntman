@@ -28,6 +28,6 @@ It is `node demo/app/server.mjs` with `PORT`. Any Node host works (Render, Fly.i
 ## 5. Submission checklist (human tasks)
 - [x] `demo/app` was written by a fresh Claude session from `demo/BRIEF.md` (not by the Stuntman builder).
 - [ ] Record the live run; store its report under `examples/` (not `runs/`).
-- [ ] 3 to 5 minute YouTube demo (spine in `docs/idea-forge/.../implementation-handoff.md`, section 12).
+- [ ] 3 to 5 minute YouTube demo (plan in `docs/SUBMISSION.md`).
 - [ ] Two public launch posts (Hacker News, X, Reddit or LinkedIn).
 - [ ] Submission form before 23:59 IST on 26 Nov 2026.

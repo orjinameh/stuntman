@@ -6,10 +6,10 @@
 - **Claimed the free Kane CLI credits before building:** Yes (confirm)
 - **GitHub repository:** https://github.com/orjinameh/stuntman
 - **Demo video:** [YouTube unlisted URL]
-- **One paragraph:** Stuntman is a zero-dependency Node CLI that turns one plain-English journey into a cast of adversarial human behaviours (the impatient double-clicker, the person who goes Back to an old checkout form, the abandoner) and runs them through Kane CLI in a real browser. A hazard is only reported when it reproduces twice with the same typed value; one failure is "suspected", and setup errors or an unachievable behaviour are "inconclusive". A confirmed hazard becomes a repair brief for a coding agent, a locked `_test.md` written before the fix, and a re-audit of the repaired app against that locked contract, followed by `kane-cli testmd run` as a replay. On a store written by a fresh Claude session, Stuntman confirmed that a customer shown $49.00 could be charged $61 (2 of 2 runs), the repair was re-audited clean, and the locked test replayed PASS. I built it with Claude (Anthropic) [add any other agent you used]. Kane verifies the behaviours end to end in a real browser; Stuntman adds the confidence rule, the lock and the repair loop around it. Limits are documented honestly: the repair was written by Claude and applied with a copy command, and Kane's agent cannot perform in-flight actions.
+- **One paragraph (update the repair sentence if you re-record):** Stuntman is a zero-dependency Node CLI that turns one plain-English journey into a cast of adversarial human behaviours (the impatient double-clicker, the person who goes Back to an old checkout form, the abandoner) and runs them through Kane CLI in a real browser. A hazard is only reported when it reproduces twice with the same typed value; one failure is "suspected", and setup errors or an unachievable behaviour are "inconclusive". A confirmed hazard becomes a repair brief for a coding agent, a locked `_test.md` written before the fix, and a re-audit of the repaired app against that locked contract, followed by `kane-cli testmd run` as a replay. On a store written by a fresh Claude session, Stuntman confirmed that a customer shown $49.00 could be charged $61 (2 of 2 runs). OpenCode (model opencode/big-pickle) then read Kane's repair brief and patched the shop itself (a server-side draft token that binds each checkout form to the exact total shown); the re-audit against the locked test was clean, 2 of 2 usable runs. I built it with Claude (Anthropic) [add any other agent you used]. Kane verifies the behaviours end to end in a real browser; Stuntman adds the confidence rule, the lock and the repair loop around it. Limits are documented honestly: Kane's agent cannot perform in-flight actions, the agent is only told (not sandboxed) not to read git history, and the offline fixtures are hand-authored.
 - **Live URL or install command:** `git clone https://github.com/orjinameh/stuntman && cd stuntman && npm test` (offline demo: `node bin/stuntman.mjs audit --fixture-state broken`)
 - **Lane:** Verification baked into your workflow
-- **Coding agents:** Other: Claude [+ any others you used]
+- **Coding agents:** Claude (built the tool) and OpenCode (repaired the app through `heal`)
 
 ## Video (3 to 4 minutes, screen recording with your voice)
 
@@ -20,9 +20,9 @@ Record these real things; cut waiting time rather than faking it.
 3. **0:40 One persona is one JSON file (30 s).** Open `personas/stale-total.json`: behaviour plus invariant ("never charged more than shown").
 4. **1:10 The audit (50 s).** Show `stuntman audit --live` output (sped up). Point at CONFIRMED and "2 of 2 runs failed with the same typed violation". Mention one failure is only "suspected".
 5. **2:00 Brief and lock (30 s).** Open the repair brief, then `lock`: "The test exists before the fix, so the agent cannot weaken it."
-6. **2:30 Repair and re-audit (40 s).** `heal`: repaired app restarted, re-audit CLEAN with "2 usable of 2".
+6. **2:30 Repair and re-audit (40 s).** `heal` with OpenCode: show the agent reading the brief, then `git diff demo/app/server.mjs | head -40`, the app restarting, and CLEAN with "2 usable of 2".
 7. **3:10 Replay (20 s).** `verify`: PASS.
-8. **3:30 Honesty (20 s).** "The repair came from Claude and was applied with a copy command. Kane's agent can't do in-flight actions, so some personas come back inconclusive instead of guessing."
+8. **3:30 Honesty (20 s).** "The agent was told not to look at the pre-written fix and its design is different from mine. Kane's agent can't do in-flight actions, so some personas come back inconclusive instead of guessing."
 
 ## Posts (post only after the video link exists)
 
