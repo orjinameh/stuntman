@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Stuntman plays the customers nobody wrote a test for, proves bugs in a real browser, locks the test before the fix, and re-audits the repair. Try the checkout hazard yourself.",
 };
 
-export const viewport: Viewport = { themeColor: "#f6efe6", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: "#fbfaff", colorScheme: "light" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
