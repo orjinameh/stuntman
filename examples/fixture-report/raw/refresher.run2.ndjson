@@ -1,8 +1,0 @@
-{"type": "run_start", "objective": "[refresher] hand-authored fixture run 2"}
-{"type": "step", "summary": "Opened http://localhost:3000/"}
-{"type": "step", "summary": "Added Harbor Mug to cart"}
-{"type": "step", "summary": "Opened checkout"}
-{"type": "step", "summary": "Performed persona behaviour"}
-{"type": "step", "summary": "Read page heading"}
-{"type": "step", "summary": "Opened /orders and recorded observations"}
-{"type": "run_end", "status": "passed", "summary": "Assertion passed: final_heading was 'Order confirmed'", "one_liner": "Assertion passed: final_heading was 'Order confirmed'", "reason": "Assertion passed: final_heading was 'Order confirmed'", "duration": 36.5, "credits": 16, "final_state": {"final_heading": "Order confirmed", "order_count": "1", "charged_total": "$49.00"}, "session_dir": "fixtures://buy-a-mug/broken/refresher.run2"}

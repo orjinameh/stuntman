@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stuntman: a customer was shown $49.00 and charged $61</title>
+<style>
+:root{--bg:#f6f4ef;--fg:#1b1b1f;--mut:#62626b;--card:#fff;--line:#e3e0d8;--red:#b3261e;--green:#1a7f37;--blue:#1f4fb8;--amber:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#141417;--fg:#ececf0;--mut:#9a9aa4;--card:#1d1d22;--line:#2c2c33;--red:#ff6b61;--green:#56d364;--blue:#79a6ff;--amber:#e3b341}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 70px}h1{font-size:30px;line-height:1.2;margin:0 0 8px}h2{margin:36px 0 10px;font-size:20px}
+.sub{color:var(--mut)}.pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid currentColor;font-size:12px;font-weight:700;letter-spacing:.05em}
+.red{color:var(--red)}.green{color:var(--green)}.blue{color:var(--blue)}.amber{color:var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0}
+ol.steps{list-style:none;padding:0;margin:14px 0}ol.steps li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0}
+ol.steps b{display:block;margin-bottom:2px}pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font:13px ui-monospace,Menlo,monospace}
+code{font:13px ui-monospace,Menlo,monospace}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.grid figure{margin:0}.grid img{width:100%;border:1px solid var(--line);border-radius:10px}.grid figcaption{font-size:13px;color:var(--mut);margin-top:4px}
+a{color:var(--blue)}table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}th{color:var(--mut)}
+</style></head><body><main>
+<h1>A customer was shown a total of $49.00 and charged $61.</h1>
+<p class="sub">Stuntman plays the customers your agent never tested, proves the bug in a real browser through Kane CLI, locks the test before the fix, and re-audits the repair. Built for the Kane CLI hackathon.</p>
+<p><a href="https://github.com/orjinameh/stuntman">Repository</a> · <a href="evidence/report.html">Real run report (F-001)</a> · <a href="#try">Run it yourself</a></p>
+
+<h2>What happened, in order (all real Kane runs, kane-cli 0.10.7)</h2>
+<ol class="steps">
+<li><b><span class="red">1. Found.</span> Persona <code>stale-total</code>, CONFIRMED 2 of 2</b>The persona adds an item after seeing the total, goes Back to the old checkout form and pays once. Kane read <b>$49.00</b> on the form it submitted; the shop charged <b>61</b>. The app was written by a fresh Claude session from a short brief; nobody planted the bug. One failure alone would only have been "suspected".</li>
+<li><b><span class="blue">2. Locked.</span> Before any fix</b>The test and its contract were written to <code>tests/stuntman-stale-total_test.md</code> and <code>stuntman.lock</code>, so the repair cannot quietly weaken the test it has to satisfy.</li>
+<li><b><span class="green">3. Repaired and re-audited CLEAN.</span> Two repairs</b>First a repair I wrote (applied with a copy command): re-audit CLEAN, replay PASS in 161 s. Then an <b>autonomous repair by OpenCode</b> (model <code>opencode/big-pickle</code>) that read only Kane's repair brief: a server-side draft token bound to the session and the exact displayed total. Re-audit CLEAN (2 of 2 usable runs), replay <b>PASS in 118 s</b>.</li>
+</ol>
+
+<h2>Evidence: the OpenCode repair (screenshots)</h2>
+<div class="grid">
+<figure><img src="img/1-agent-run-and-guard.jpg" alt="Adapter starts OpenCode and the agent reads the app"><figcaption>The agent starts and reads the app.</figcaption></figure>
+<figure><img src="img/2-clean-verdict.jpg" alt="Guard passes, app restarts, re-audit CLEAN"><figcaption>Guard check passes; re-audit CLEAN.</figcaption></figure>
+<figure><img src="img/3-agent-diff.jpg" alt="The agent's diff"><figcaption>What the agent changed.</figcaption></figure>
+<figure><img src="img/4-verify-pass.jpg" alt="Locked test replay PASS"><figcaption>Locked test replays: PASS.</figcaption></figure>
+</div>
+<p class="sub">The agent's repaired file and raw transcripts were lost when the Codespace expired, so this run is evidenced by screenshots only. The first version of the adapter parked the pre-written repair inside the repo under a visible name; the agent's design is different from it, and the adapter now hides it outside the repo.</p>
+
+<h2>Other personas in the same audit</h2>
+<table><tr><th>Persona</th><th>Result</th></tr>
+<tr><td>stale-total</td><td class="red"><b>CONFIRMED</b> (F-001)</td></tr>
+<tr><td>abandoner, back-button, impatient, refresher</td><td class="green">clean (refresher is a weak result: Kane cannot reload mid-payment)</td></tr>
+<tr><td>slow-submit, returning</td><td class="amber">inconclusive: Kane's agent cannot act while a request is in flight, and one run timed out</td></tr></table>
+<p class="sub">Inconclusive is never reported as a finding. A hazard needs two identical failures; a setup error, a timeout or a missing value never confirms anything.</p>
+
+<h2 id="try">Run it yourself</h2>
+<div class="card"><b>No account, no Kane, 2 minutes</b>
+<pre>git clone https://github.com/orjinameh/stuntman &amp;&amp; cd stuntman
+npm test
+node bin/stuntman.mjs report --run examples/live-f001-report</pre></div>
+<div class="card"><b>See the bug in the shop by hand</b> (the unfixed app)
+<pre>node demo/baseline/server.mjs      # http://localhost:3000</pre>
+Add the Harbor Mug, open the cart, continue to checkout (total $49.00). Use the header links to go back to the shop and add a Field Notebook. Press the browser Back button twice to return to the old checkout form, then pay. On <code>/orders</code> the charge is $61.00. Chrome sometimes re-fetches that form and shows the new total; Kane hit the stale form in 2 of 2 runs, so it depends on browser caching.</div>
+
+<h2>Honest limits</h2>
+<ul><li>Kane's agent acts one step at a time: personas that need an action while a request is in flight cannot run and come back inconclusive.</li>
+<li>The offline <code>fixtures/</code> are hand-authored demo data, labelled FIXTURE everywhere; the real evidence is the archived live report.</li>
+<li>The agent is told not to read git history; that cannot be sandboxed.</li>
+<li>The contract lock is a tripwire, not a security boundary.</li></ul>
+</main></body></html>

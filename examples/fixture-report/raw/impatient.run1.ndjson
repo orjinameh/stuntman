@@ -1,8 +1,0 @@
-{"type": "run_start", "objective": "[impatient] hand-authored fixture run 1"}
-{"type": "step", "summary": "Opened http://localhost:3000/"}
-{"type": "step", "summary": "Added Harbor Mug to cart"}
-{"type": "step", "summary": "Opened checkout"}
-{"type": "step", "summary": "Performed persona behaviour"}
-{"type": "step", "summary": "Read page heading"}
-{"type": "step", "summary": "Opened /orders and recorded observations"}
-{"type": "run_end", "status": "failed", "summary": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'", "one_liner": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'", "reason": "Assertion failed: final_heading was 'Cart', expected 'Order confirmed'", "duration": 41.2, "credits": 18, "final_state": {"final_heading": "Cart", "order_count": "1", "charged_total": "$49.00"}, "session_dir": "fixtures://buy-a-mug/broken/impatient.run1"}

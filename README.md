@@ -8,6 +8,17 @@ Stuntman is a zero-dependency Node CLI. You describe one purchase journey in pla
 
 Built for the KaneCLI Online Hackathon (TestMu AI). Judged on Ships, Verified, Closed loop, Craft.
 
+## Judges, start here (no account, no Kane, about 2 minutes)
+
+Live page: https://orjinameh.github.io/stuntman/ (the real report, the autonomous-repair screenshots and a by-hand reproduction of the bug).
+
+```bash
+git clone https://github.com/orjinameh/stuntman && cd stuntman
+npm test                                                   # offline tests
+node bin/stuntman.mjs report --run examples/live-f001-report   # replays the REAL archived Kane run: F-001 CONFIRMED
+```
+Open `examples/live-f001-report/report.html` for the evidence, and `examples/opencode-heal/` for the autonomous repair. `node bin/stuntman.mjs audit --fixture-state broken` runs the offline demo, which uses hand-authored fixtures and says `FIXTURE` everywhere.
+
 ## What it found (real Kane runs, kane-cli 0.10.7, headless Chrome)
 
 The target is a small store (`demo/app`) written by a fresh Claude session from `demo/BRIEF.md`; nobody planted a bug in it.
@@ -19,11 +30,11 @@ The target is a small store (`demo/app`) written by a fresh Claude session from 
 | Repair | the form now carries the displayed total; the server refuses to charge when the cart total has changed (`demo/patches/0002-…`, `demo/fixed/server.mjs`) |
 | Re-audit after repair (`heal`) | **CLEAN**, 2 of 2 usable runs honoured "never charged more than shown" |
 | Replay of the locked test (`verify`) | **PASS**, `kane-cli testmd run`, 161 s |
-| **Autonomous repair** (`heal` with OpenCode, model `opencode/big-pickle`) | the agent read only Kane's repair brief and edited the shop itself: each checkout form now carries a server-side draft token bound to the session and the exact total shown; `POST /checkout` charges that snapshot, consumes only those items and is idempotent on replay. Re-audit **CLEAN**, 2 of 2 usable runs. The locked contract was untouched (checked by the adapter) |
+| **Autonomous repair** (`heal` with OpenCode 1.19.6, model `opencode/big-pickle`) | the agent read only Kane's repair brief and edited the shop itself: each checkout form carries a server-side draft token bound to the session and the exact total shown; `POST /checkout` charges that snapshot, consumes only those items and is idempotent on replay. Re-audit **CLEAN**, 2 of 2 usable runs; the adapter confirmed the locked contract was untouched; `verify --live` then **PASS** (118 s). Evidence: `examples/opencode-heal/` (screenshots) |
 
 Evidence is in `examples/live-f001-report/` (`report.html`, `report.json`, raw Kane transcripts, heal re-audit transcripts, the brief). `LIVE_RUN.md` is the honest log of every live run, including the failures.
 
-**Disclosures.** Two repairs were run against the same finding: first one I wrote (`demo/fixed/server.mjs`, applied with `cp`), then an autonomous OpenCode repair through `heal --agent-cmd 'node demo/agent-run.mjs {brief}'`; `demo/app/server.mjs` now holds the OpenCode version. During the OpenCode run the pre-written repair was moved out of the working tree, but the first version of that adapter moved it to a hidden directory *inside* the repo whose name was visible in a directory listing (the agent's solution is a different design, so it did not copy it; later versions move it to a random temp directory). The agent is also only *told* not to read git history. The "before" confirmation and the "after" re-audits used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
+**Disclosures.** Two repairs were run against the same finding: first one I wrote (`demo/fixed/server.mjs`, applied with `cp`; it is what `demo/app/server.mjs` holds in this repository), then an autonomous OpenCode repair through `heal --agent-cmd 'node demo/agent-run.mjs {brief}'`. The OpenCode run is evidenced by screenshots only (`examples/opencode-heal/`): the Codespace expired before its repaired file and transcripts were saved. During that run the pre-written repair was parked in hidden directories *inside* the repo whose names were visible in the agent's own directory listing; the agent's design differs from the pre-written one, so it did not copy it, and the adapter now stashes it in a random temp directory. The agent is also only *told* not to read git history. The "before" confirmation and the "after" re-audits used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
 
 ## Quick start (no Kane account, no network)
 

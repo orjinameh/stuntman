@@ -1,8 +1,0 @@
-{"type": "run_start", "objective": "[back-button] hand-authored fixture run 1"}
-{"type": "step", "summary": "Opened http://localhost:3000/"}
-{"type": "step", "summary": "Added Harbor Mug to cart"}
-{"type": "step", "summary": "Opened checkout"}
-{"type": "step", "summary": "Performed persona behaviour"}
-{"type": "step", "summary": "Read page heading"}
-{"type": "step", "summary": "Opened /orders and recorded observations"}
-{"type": "run_end", "status": "passed", "summary": "Assertion passed: order_count was 1", "one_liner": "Assertion passed: order_count was 1", "reason": "Assertion passed: order_count was 1", "duration": 52.3, "credits": 21, "final_state": {"final_heading": "Cart", "order_count": "1", "charged_total": "$49.00"}, "session_dir": "fixtures://buy-a-mug/broken/back-button.run1"}
