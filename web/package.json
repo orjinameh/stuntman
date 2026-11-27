@@ -1,0 +1,27 @@
+{
+  "name": "stuntman-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Judge-facing Next.js site for Stuntman (additive: the root Node CLI is untouched).",
+  "scripts": {
+    "predev": "node scripts/sync-evidence.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/sync-evidence.mjs",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.spec.ts"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": { "node": ">=22.6" }
+}
