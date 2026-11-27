@@ -10,7 +10,7 @@ Built for the KaneCLI Online Hackathon (TestMu AI). Judged on Ships, Verified, C
 
 ## Judges, start here (no account, no Kane, about 2 minutes)
 
-Live page: https://orjinameh.github.io/stuntman/ (the real report, the autonomous-repair screenshots and a by-hand reproduction of the bug).
+Live site: https://stuntman-five.vercel.app (an interactive simulation of the $49 → $61 bug and its two repairs, the autonomous-repair screenshots, the F-001 report). The earlier static page is still at https://orjinameh.github.io/stuntman/ (the real report, the screenshots and a by-hand reproduction of the bug).
 
 ```bash
 git clone https://github.com/orjinameh/stuntman && cd stuntman
@@ -36,12 +36,27 @@ Evidence is in `examples/live-f001-report/` (`report.html`, `report.json`, raw K
 
 **Disclosures.** Two repairs were run against the same finding: first one I wrote (`demo/fixed/server.mjs`, applied with `cp`; it is what `demo/app/server.mjs` holds in this repository), then an autonomous OpenCode repair through `heal --agent-cmd 'node demo/agent-run.mjs {brief}'`. The OpenCode run is evidenced by screenshots only (`examples/opencode-heal/`): the Codespace expired before its repaired file and transcripts were saved. During that run the pre-written repair was parked in hidden directories *inside* the repo whose names were visible in the agent's own directory listing; the agent's design differs from the pre-written one, so it did not copy it, and the adapter now stashes it in a random temp directory. The agent is also only *told* not to read git history. The "before" confirmation and the "after" re-audits used persona wording versions 1.4.0 and 1.5.0 (wording only; same invariant). Four other personas ran clean, two were inconclusive because Kane's agent cannot act while a request is in flight (see Limitations). The `fixtures/` directory is hand-authored offline demo data, labelled `FIXTURE` in every report; it is not live evidence.
 
+## The website (`web/`)
+
+`web/` is a Next.js (App Router, TypeScript) site for judges and reviewers, deployed at https://stuntman-five.vercel.app. It is additive: the CLI, its tests and `docs/` do not depend on it.
+
+- **Interactive simulation, no real payments.** Switch between the original shop, Repair A (reject stale checkout) and Repair B (snapshot checkout), step through the scenario or click around, and watch the displayed total against the charged total. The logic is pure TypeScript in integer cents (`web/lib/simulator-model.ts`) with 12 tests. It mirrors the documented behaviour of `demo/baseline`, `demo/fixed` and the Repair B description; it is a simulation written for the page, not the real server.
+- **Evidence and report.** The four OpenCode screenshots from `examples/opencode-heal/` and an F-001 page built from `examples/live-f001-report/report.json`. Fixtures are never used as evidence there.
+- **Same caveat as above:** Repair B is shown by screenshots and re-audit transcripts only; its source file was not saved.
+
+```bash
+cd web && npm install && npm run dev      # http://localhost:3000
+npm test                                   # simulator tests (Node >= 22.6)
+```
+
+Vercel: Root Directory `web`, Next.js preset, defaults. The styling is a removable layer (`web/app/awwwards.css`, one import in `web/app/layout.tsx`).
+
 ## Quick start (no Kane account, no network)
 
 Node 20+ and git.
 
 ```bash
-npm test                                          # 50 offline tests
+npm test                                          # 66 offline tests
 node bin/stuntman.mjs audit --fixture-state broken   # exits 1: impatient CONFIRMED
 node bin/stuntman.mjs brief F-001                 # repair brief for a coding agent
 node bin/stuntman.mjs lock                        # locks the contract BEFORE the fix
@@ -164,7 +179,8 @@ personas/*.json           versioned packs    fixtures/   offline run_end transcr
 demo/app/server.mjs       storefront (the demo, not the product)   demo/BRIEF.md  the brief it was built from
 demo/patches + agent-fix  reference repair (confirmation on repeat submit) + stand-in agent         demo/second/   second app, other hazard
 docs/SUBMISSION.md        submission kit (form answers, video plan, posts)
+web/                      Next.js judge site (simulator, evidence, report), deployed on Vercel
 ```
 
 ## Documents
-`SETUP.md` · `DEPLOY.md` · `TESTING.md` · `BUILD_REPORT.md` · `LIVE_RUN.md`
+`SETUP.md` · `DEPLOY.md` · `TESTING.md` · `BUILD_REPORT.md` · `LIVE_RUN.md` · `web/README.md`
